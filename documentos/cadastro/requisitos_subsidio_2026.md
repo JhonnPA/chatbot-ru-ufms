@@ -10,5 +10,6 @@ Para utilizar o Restaurante Universitário com subsídio é necessário:
 Quem não cumpre esses requisitos pode usar o RU pagando o valor integral (servidores e visitantes também pagam o valor integral).
 
 ## Contatos
+
 Secretaria de Integração e Apoio Estudantil (Seint/Diaes/Proaes): (67) 3345-7242 e 3345-7698, e-mail seint.proaes@ufms.br.
 Sugestões, dúvidas e reclamações sobre o RU: ru.proaes@ufms.br.
