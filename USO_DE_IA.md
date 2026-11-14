@@ -10,28 +10,26 @@
 > exemplo e todas as marcações TODO.
 
 ## 1. Ferramentas usadas
-
+ 
 | Ferramenta (nome e versão/modelo) | Como acessaram | Quem usou |
 |---|---|---|
-| _Exemplo: OpenRouter, modelo openai/gpt-6-luna_ | _chave do grupo, via código_ | _todos_ |
-| _Exemplo: ChatGPT (versão gratuita)_ | _navegador_ | _Fulana_ |
-| TODO | | |
-
+| Claude (Anthropic), modelo Claude Opus 5.5 | claude.ai, navegador, com busca na web | Jonathan Amaral |
+ 
 ## 2. Usos, um por linha
-
-| # | Etapa | O que a IA fez | Prompt (ou resumo + link para o registro) | O que o grupo fez com o resultado |
+ 
+| # | Etapa | O que a IA fez | Prompt (resumo) | O que o grupo fez com o resultado |
 |---|---|---|---|---|
-| 1 | _Dados de treino_ | _Gerou 412 frases para 6 intenções_ | _ver `dados/prompts_llm.md`_ | _Revisamos todas; 57 descartadas, 12 rótulos corrigidos_ |
-| 2 | _Chatbot_ | _Redige as respostas das intenções e do chitchat_ | _prompts em `chatbot/llm.py` + persona do `grupo.yaml`_ | _Ajustamos a persona 3 vezes após testes (seção X do artigo)_ |
-| 3 | _Código_ | _Sugeriu a função que plota a curva de validação_ | _"como plotar o resultado do GridSearchCV em função de C"_ | _Adaptamos nomes e eixos; entendemos e testamos_ |
-| 4 | _Escrita_ | _Revisou a gramática da Introdução_ | _"revise a gramática sem mudar o conteúdo: ..."_ | _Aceitamos parte das sugestões_ |
-| TODO | | | | |
-
+| 1 | Base de conhecimento | A partir do Guia Prático do RU 2026, pesquisado e fornecido pelo grupo, apontou quais intenções o guia não cobria e sugeriu documentos oficiais complementares da UFMS | "Com base no Guia Prático do RU da UFMS (2026) que estamos enviando, identifique quais intenções do chatbot ele não cobre e indique documentos oficiais da UFMS vigentes em 2026 (resoluções, editais da Proaes) que preencham essas lacunas, com a pasta de cada um." | Avaliamos as sugestões, escolhemos a Resolução nº 399-Coun/UFMS e o Edital nº 114/2026-Proaes/Aginter, baixamos os PDFs nos sites oficiais, conferimos datas e conteúdo e os fornecemos para a organização da base |
+| 2 | Base de conhecimento | Reorganizou o Guia Prático do RU 2026 em 4 arquivos `.md`, um por intenção (cardapio, horarios, valores, cadastro) | "Divida o conteúdo do Guia Prático do RU 2026 em documentos Markdown, um por intenção (cardapio, horarios, valores, cadastro), mantendo apenas informações presentes no guia, sem acrescentar ou inferir dados." | Conferimos cada arquivo, item a item, contra o PDF original |
+| 3 | Base de conhecimento | Fez uma busca na web por regras de conduta do RU da UFMS e redigiu `regras_uso/regras_de_uso_2026.md`, registrando a ausência de documento oficial e indicando o contato da Proaes | "Pesquise em fontes oficiais da UFMS as regras de uso do RU (marmita, mochila, conduta no refeitório). Se não houver documento oficial, escreva um documento curto que deixe isso explícito e oriente o usuário a procurar a Proaes pelo e-mail ru.proaes@ufms.br." | Conferimos a ausência de regulamento pesquisando no Boletim Oficial e no site da Proaes, definimos que o documento trataria só de conduta e revisamos o texto |
+| 4 | Base de conhecimento | Redigiu `recarga_creditos/formas_de_pagamento.md` a partir da informação fornecida pelo grupo | "O RU da UFMS não usa sistema de créditos: a refeição é paga na hora, no débito, crédito ou Pix. Escreva um documento curto sobre as formas de pagamento, usando os valores do Guia Prático do RU 2026, sem acrescentar regras." | As formas de pagamento vieram da nossa experiência como usuários do RU; conferimos o texto |
+ 
 ## 3. O que NÃO foi feito com IA
-
-TODO: digam explicitamente o que foi feito sem IA (ex.: definição das intenções,
-frases do teste, análise dos erros, conclusões).
-
+ 
+- Escolha do tema e definição das intenções (feitas pelo grupo na proposta de 23/10/2026).
+- Informação sobre as formas de pagamento (débito, crédito, Pix).
+- Obtenção do Guia Prático do RU 2026 e download dos documentos oficiais.
+- COMPLETAR AO LONGO DO PROJETO: frases do teste, análise dos erros, conclusões.
 ## 4. Reflexão (2 a 4 frases)
-
-TODO: onde a IA ajudou, onde atrapalhou ou errou, e como vocês verificaram o que ela produziu.
+ 
+A IA acelerou a busca de documentos oficiais e a organização da base de conhecimento. Ela errou em pontos que só identificamos conferindo as fontes: usou primeiro o Guia do RU de 2025, com valores e horários desatualizados, até fornecermos a versão de 2026; e listou o mesmo edital duas vezes, com links diferentes. Também não sabia que o RU não usa créditos, o que corrigimos com a nossa experiência. Por isso, conferimos todo arquivo gerado contra o documento original antes de incluí-lo.
