@@ -6,19 +6,23 @@
 # =============================================================================
 
 grupo:
-  nome: "TODO: nome do grupo (ex.: Grupo 3)"
+  nome: "CGJ"
   integrantes:          # 3 a 4 integrantes
-    - nome: "TODO"
-      rga: "TODO"
-    - nome: "TODO"
-      rga: "TODO"
-    - nome: "TODO"
-      rga: "TODO"
+    - nome: "Jonathan Pereira do Amaral"
+      rga: "202419060072"
+    - nome: "Cleiton Pinheiro Rodrigues"
+      rga: "202419060102"
+    - nome: "Gabriel Mattos de Aquino"
+      rga: "202419060064"
+    - nome: "Felippe Baes Sales Lara"
+      rga: "202219060141"
 
 tema:
-  nome: "TODO: tema validado com o professor"
+  nome: "Restaurante universitário"
   descricao: >
-    TODO: uma ou duas frases dizendo o que o bot faz e para quem.
+    Assistente virtual que tira dúvidas de estudantes da UFMS sobre o Restaurante
+    Universitário: cardápio, horários, valores e isenções, recarga de créditos e formas de pagamento,
+    cadastro de acesso e regras de uso.
 
 dados:                  # caminhos relativos a este arquivo - não altere
   treino: dados/treino.csv
@@ -37,9 +41,12 @@ llm:
   max_tokens: 300
   usar_em: [intencoes, chitchat]         # nós em que o LLM redige a resposta
   persona: >
-    TODO: quem é o bot e como ele fala. Ex.: "Você é o Rex, assistente virtual do
-    Restaurante Universitário. Seja cordial, simples e direto."
-  contato: "TODO: para onde encaminhar o que o bot não sabe (setor, e-mail...)"
+    Você é o Rango, assistente virtual do Restaurante Universitário (RU) da UFMS.
+    Fale de forma simpática, direta e com linguagem simples, como um colega de
+    campus. Responda apenas com base nos trechos de documentos fornecidos; se a
+    informação não estiver neles, diga que não sabe e indique o contato. Nunca
+    invente preços, horários, prazos ou regras.
+  contato: "a Divisão de Alimentação da Proaes, pelo e-mail ru.proaes@ufms.br"
   max_frases: 3
   turnos_historico: 3
 
@@ -61,35 +68,51 @@ roteamento:
 # De 5 a 10 intenções. O nome (chave) deve ter só letras minúsculas sem acento,
 # dígitos e "_". "descricao" aparece nas mensagens do bot ("Posso ajudar com: ...").
 intencoes:
-  TODO_intencao_1:
-    descricao: "TODO"
+  cardapio:
+    descricao: "cardápio do dia ou da semana"
     resposta: >
-      TODO: resposta fixa curta (usada sem LLM e na avaliação automática). Com o
-      LLM ligado, o bot responde a partir dos documentos da pasta documentos/.
-  TODO_intencao_2:
-    descricao: "TODO"
+      O cardápio mensal é elaborado por nutricionistas e aprovado pela Proaes. O almoço
+      e o jantar têm saladas, arroz e feijão, prato principal, guarnição e fruta, todos
+      com opção vegetariana. O café da manhã tem bebidas quentes, pão, ovo mexido e fruta.
+      Não há cardápio específico para alergias: consulte o nutricionista do RU.
+  horarios:
+    descricao: "horários de funcionamento"
     resposta: >
-      TODO
-  TODO_intencao_3:
-    descricao: "TODO"
+      Em Campo Grande, de segunda a sexta: café da manhã das 6h30 às 9h, almoço das
+      10h30 às 14h e jantar das 17h30 às 20h30. Aos sábados, café e almoço nos mesmos
+      horários. O RU fecha em feriados e pontos facultativos.
+  valores:
+    descricao: "preços das refeições e isenções"
     resposta: >
-      TODO
-  TODO_intencao_4:
-    descricao: "TODO"
+      Estudantes de graduação, mestrado, doutorado e residência com CadÚnico de até
+      1,5 salário mínimo per capita pagam R$ 1,00 no café da manhã e R$ 3,00 no almoço
+      e no jantar. Os demais estudantes, servidores e visitantes pagam o valor integral.
+  recarga_creditos:
+    descricao: "recarga de créditos e formas de pagamento"
     resposta: >
-      TODO
-  TODO_intencao_5:
-    descricao: "TODO"
+      A refeição é paga na hora, no cartão de débito, no cartão de crédito ou por Pix.
+      Não há sistema de créditos nem recarga. Em caso de cobrança indevida, escreva
+      para ru.proaes@ufms.br.
+  cadastro:
+    descricao: "cadastro e acesso ao RU"
     resposta: >
-      TODO
+      Para usar o RU com subsídio, é preciso estar matriculado na UFMS, preencher o
+      Perfil do Estudante no Siscad anexando o comprovante do CadÚnico, ter a Identidade
+      Estudantil da UFMS e instalar o aplicativo Sou UFMS.
+  regras_uso:
+    descricao: "regras de uso do RU"
+    resposta: >
+      O RU atende estudantes de graduação, mestrado, doutorado e residência, servidores
+      e visitantes da UFMS. Para outras dúvidas sobre regras de uso, consulte a Proaes
+      pelo e-mail ru.proaes@ufms.br.
 
 # Respostas dos nós que não são intenções. {assuntos} vira a lista de descrições
 # das intenções; {opcao1}/{opcao2}, as duas intenções mais prováveis.
 respostas:
   chitchat:
-    saudacao: "Olá! Como posso ajudar?"
-    agradecimento: "Por nada!"
-    despedida: "Até logo!"
-    padrao: "Sou um assistente automático e posso ajudar com: {assuntos}."
-  fora_dominio: "Desculpe, não sei responder sobre isso. Posso ajudar com: {assuntos}."
+    saudacao: "Olá! Sou o Rango, assistente do RU da UFMS. Como posso ajudar?"
+    agradecimento: "Por nada! Bom apetite!"
+    despedida: "Até logo! Bom apetite!"
+    padrao: "Sou o Rango, assistente automático do RU, e posso ajudar com: {assuntos}."
+  fora_dominio: "Desculpe, só sei responder sobre o Restaurante Universitário. Posso ajudar com: {assuntos}."
   esclarecer: "Não tenho certeza se entendi. Sua dúvida é sobre {opcao1} ou sobre {opcao2}?"
