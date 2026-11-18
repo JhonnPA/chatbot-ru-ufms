@@ -835,6 +835,53 @@ LLM no teste, nenhuma duplicata normalizada nos conjuntos e nenhuma sobreposiç�
 normalizada entre eles. Os três arquivos oficiais continuam idênticos à develop
 local; nenhuma avaliação final ou verificação oficial foi executada.
 
+## Conclusão dos conjuntos — Missão 07G
+
+O responsável forneceu cinco candidatas sintéticas independentes em
+`dados/_brutos/candidatas_regras_07g.csv` e autorizou selecionar no máximo uma.
+Após leitura semântica individual, foi selecionada **G07G:003** (terceiro registro,
+linha 4 do CSV): “Dá ruim se alguém colocar música numa caixinha de som enquanto
+tá almoçando no RU?”. O texto foi preservado integralmente, com
+`intencao=regras_uso` e `origem=llm`.
+
+A pergunta explicita o RU e trata de conduta de convivência com música amplificada,
+família distinta das já selecionadas. Não afirma a existência de uma proibição
+institucional. Não apresentou duplicata normalizada ou sinais de proximidade
+problemática com o treino e o teste no detector existente; a seleção semântica
+considerou somente as candidatas e o treino, sem adaptar a frase ao teste.
+As outras quatro candidatas não foram incorporadas. G07D:013 continua excluída.
+
+A revisão das cinco está em `dados/_brutos/revisao_candidatas_07g.csv`, com decisão
+técnica por ID, justificativa, hash de texto e proveniência da curadoria por IA
+autorizada. A geração das cinco tem origem LLM declarada pelo responsável; ferramenta,
+modelo e prompt de geração não foram fornecidos e permanecem pendentes no registro
+de IA. Não atribuir a geração dessas cinco ao modelo da 07D por suposição.
+Não houve confirmação de revisão manual individual das 124 recomendações 07E ou
+da nova selecionada; a autorização de curadoria técnica não foi registrada como tal revisão.
+
+`dados/treino.csv` foi efetivamente preenchido em UTF-8, separador vírgula e somente
+`texto,intencao,origem`. A reconstrução conferiu as decisões de origem (420 da 07B,
+cinco da 07C e 124 da 07E), seus hashes e textos antes de acrescentar a selecionada.
+São **550 exemplos: 268 humanos e 282 LLM (48,73% humano)**, com 50 de cada uma
+das seis intenções RU, 100 chitchat e 150 fora_dominio. Todos os mínimos foram atendidos.
+
+**SHA-256 do treinamento:**
+`fc260493bf144e3a6b5ecac2e2e7064f31b53dda597948cfc8e689fea5b665f5`.
+
+O manifesto privado `dados/_brutos/manifesto_conjuntos_07g.json` registra fontes,
+IDs da seleção final, composição, origem da decisão, revisão manual não confirmada
+e hashes. Não há duplicatas normalizadas nos conjuntos nem sobreposição normalizada.
+Os controles lexicais não são prova de ausência de toda paráfrase semântica.
+O teste permanece integralmente preservado: **160 humanas**, sem LLM, SHA-256
+`fa760e167d565a9a3e5bd015465c4ec945f7855e0bd78b5542dc561e21ea9b81`.
+
+A preparação quantitativa e a curadoria técnica desta etapa estão concluídas;
+os conjuntos estão prontos para a **Missão 08 — treinamento e experimentos**,
+com seleção de modelos, vetorizadores, hiperparâmetros e limiar exclusivamente
+por treino/CV. A revisão humana manual não foi inventada, e as pendências de
+metadados de geração devem ser recuperadas para artigo/vídeo. Nesta missão não
+houve geração de frases, treinamento, OpenRouter, avaliação oficial ou verificador.
+
 ## Evidências e próximos passos
 
 O script confere novamente os bytes dos dois arquivos ao terminar e falha se uma
