@@ -796,6 +796,45 @@ As fontes brutas e os artefatos históricos também foram preservados. Nesta mis
 não houve geração de frases, treinamento, ajuste de modelos, OpenRouter ou execução
 dos scripts oficiais de avaliação/verificação.
 
+## Busca da última substituta e reconstrução — Missão 07F
+
+A busca foi limitada aos 36 envios humanos destinados a treino e à base sintética
+existente; os 31 envios reservados foram excluídos antes da seleção. Não foi
+identificada alternativa inequivocamente válida e distinta para `regras_uso`.
+As respostas humanas restantes relevantes eram vagas, meta-respostas, mistura de
+permissão e preço ou paráfrases já excluídas; as sintéticas pertinentes repetiam
+famílias existentes. A ampliação a outras colunas também não forneceu substituta.
+Isso registra o resultado da busca, sem certificar esgotamento absoluto do acervo.
+`G07D:013` permaneceu excluída conforme orientação expressa do responsável.
+
+A seleção foi reconstruída a partir de **420 decisões ratificadas na 07B, cinco
+aprovações específicas da 07C e 124 recomendações semânticas da 07E**. Foram
+conferidos IDs, rótulos, origens, hashes dos snapshots e textos contra as células
+originais sem remover espaços. Os bytes reconstruídos coincidem integralmente
+com `treino_parcial_07e.csv`: **549 exemplos, 268 humanos e 281 LLM (48,82%)**.
+Há 50 em cada intenção RU exceto `regras_uso` (49), 100 chitchat e 150 fora_dominio.
+O SHA-256 desse parcial é
+`6b136ee3d7ed28e4b3b46ce1dcdecaef8d28f9a48eab454e7505da3fc47c4679`.
+
+`dados/_brutos/validacao_finalizacao_07f.json` registra a reconstrução, fontes,
+restrições da busca, casos sem inclusão e contagens. Nenhuma nova aprovação humana
+foi atribuída ao grupo. A revisão manual individual das 124 novas frases continua
+sem confirmação; a autorização da 07F permite curadoria técnica assistida por IA,
+sem transformar essa assistência em revisão humana.
+
+`dados/treino.csv` não foi preenchido: **falta um exemplo distinto de regras_uso**.
+A preparação quantitativa permanece incompleta. Obter esse exemplo por coleta
+humana original ou geração no ambiente isolado, sem inspiração no teste, antes
+de materializar os 550 exemplos e liberar a base completa para a Missão 08.
+Não houve geração de substituições ou treinamento nesta sessão.
+
+O teste continua com 160 frases humanas e SHA-256
+`fa760e167d565a9a3e5bd015465c4ec945f7855e0bd78b5542dc561e21ea9b81`.
+A reconstrução confirmou esquema de três colunas, mínimos do teste, nenhuma origem
+LLM no teste, nenhuma duplicata normalizada nos conjuntos e nenhuma sobreposição
+normalizada entre eles. Os três arquivos oficiais continuam idênticos à develop
+local; nenhuma avaliação final ou verificação oficial foi executada.
+
 ## Evidências e próximos passos
 
 O script confere novamente os bytes dos dois arquivos ao terminar e falha se uma
