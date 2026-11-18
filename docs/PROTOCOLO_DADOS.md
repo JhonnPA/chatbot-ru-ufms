@@ -735,6 +735,67 @@ ao gerador. Só então incorporar o complemento autorizado e verificar os mínim
 quotas com mensagens ambíguas nem promover textos LLM a humanos. Não houve geração,
 treinamento de classificadores, avaliação final ou criação do ambiente externo nesta missão.
 
+## Conferência do complemento recebido — Missão 07E
+
+Foram recebidos `dados/_brutos/gerados_complementares_07d.csv` (125 frases) e
+`REGISTRO_GERACAO_07D.md`. O registro declara ChatGPT, modelo GPT-6, build exato e
+parâmetros não informados, geração em 18/11/2026, lote único `07D-L01`, sem
+OpenRouter. O responsável informou conversa separada que recebeu somente o treino;
+o registro ressalva que não comprova isolamento físico/virtual. Essa limitação foi
+preservada, sem afirmar verificação externa. O prompt e o anexo de instruções
+fornecidos foram transcritos em `dados/prompts_llm.md`; o registro privado conserva
+a saída original integral e a associação das 125 linhas ao lote.
+
+O Codex examinou individualmente as 125 frases, mantendo texto, classe e `origem=llm`:
+**124 foram consideradas adequadas** e **uma excessivamente semelhante**, sem
+rejeição definitiva ou correção automática de rótulo. A revisão privada é
+`dados/_brutos/revisao_gerados_07d.csv`, com ID, linha, texto, rótulo, classificação,
+recomendação, justificativa e hash individual. Todas as decisões humanas começam
+pendentes. O subconjunto para decisão está em `pendencias_gerados_07d.csv`.
+
+O caso `G07D:013` compartilha o núcleo de guardar lugar para amigo com `S0087:C07`,
+já aprovado no treino. A nova formulação especifica fila; a antiga não determina
+fila ou assento. A distinção pode ser relevante, mas precisa de confirmação do
+responsável para evitar aceitar uma paráfrase trivial apenas para completar a quota.
+Nenhum exemplo do teste motivou essa sinalização ou foi usado para gerar substitutos.
+
+O complemento tem zero duplicatas exatas e normalizadas, zero interseções normalizadas
+com treino e teste e nenhum sinal do detector existente de proximidade com o teste.
+Os controles lexicais não provam ausência de toda paráfrase. A leitura semântica
+identificou negativos difíceis explícitos sobre outros serviços, sem solicitações
+do RU rotuladas como chitchat ou fora_dominio. As perguntas de regras não foram
+convertidas em afirmações de regras institucionais.
+
+O parcial **proposto**, ainda sujeito à conferência humana, está em
+`dados/_brutos/treino_parcial_07e.csv`: 425 exemplos anteriores mais 124 recomendações
+da IA, totalizando **549, com 268 humanos e 281 LLM (48,82% humano)**. O manifesto é
+`dados/_brutos/manifesto_curadoria_07e.json`, com hashes das fontes, revisão, parcial
+e teste, IDs de seleção, contagens, limitação e revisão humana pendente.
+
+| Classe | Quantidade proposta | Falta para o mínimo |
+|---|---:|---:|
+| cardapio | 50 | 0 |
+| horarios | 50 | 0 |
+| valores | 50 | 0 |
+| recarga_creditos | 50 | 0 |
+| cadastro | 50 | 0 |
+| regras_uso | 49 | 1 |
+| chitchat | 100 | 0 |
+| fora_dominio | 150 | 0 |
+| **Total** | **549** | **1** |
+
+`dados/treino.csv` permaneceu somente com cabeçalho: não foi apresentado como conjunto
+completo. Se o responsável confirmar a diferença de contexto do caso sinalizado,
+a composição projetada passa a 550, com 50 regras_uso e 48,73% humano. Caso contrário,
+falta um exemplo distinto de regras_uso a obter em ambiente isolado, sem inspiração
+no teste. A conferência final das 125 frases pelo responsável continua pendente.
+
+O teste foi usado exclusivamente para controle de contaminação; seus bytes e SHA-256
+`fa760e167d565a9a3e5bd015465c4ec945f7855e0bd78b5542dc561e21ea9b81` foram preservados.
+As fontes brutas e os artefatos históricos também foram preservados. Nesta missão
+não houve geração de frases, treinamento, ajuste de modelos, OpenRouter ou execução
+dos scripts oficiais de avaliação/verificação.
+
 ## Evidências e próximos passos
 
 O script confere novamente os bytes dos dois arquivos ao terminar e falha se uma
