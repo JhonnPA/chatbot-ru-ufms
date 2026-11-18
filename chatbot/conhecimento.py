@@ -2,13 +2,14 @@
 
 É a parte "R" de um sistema RAG (*Retrieval-Augmented Generation*, geração
 aumentada por recuperação). Em vez de o LLM responder "de cabeça" (e inventar), o
-bot primeiro **recupera** os trechos dos documentos oficiais mais parecidos com a
+bot primeiro **recupera** os trechos dos documentos do grupo mais parecidos com a
 pergunta e só então pede ao LLM que responda **com base nesses trechos**.
 
 Como funciona
 -------------
 
-1. **Documentos.** O grupo coloca os arquivos oficiais do tema na pasta
+1. **Documentos.** O grupo coloca os arquivos do tema, com autoridade identificada,
+   na pasta
    ``documentos/`` (``.pdf``, ``.md``, ``.txt``, ``.html``), organizados assim::
 
        documentos/
@@ -54,7 +55,7 @@ EXTENSOES = {".md", ".txt", ".pdf", ".html", ".htm"}
 #: arquivos de controle da pasta, que NÃO entram na base
 IGNORADOS = {"fontes.md", "leiame.md", "readme.md"}
 GERAL = "geral"
-VERSAO_INDICE = 1
+VERSAO_INDICE = 2
 
 
 @dataclass
@@ -111,8 +112,24 @@ def listar_documentos(pasta: Path) -> list[Path]:
     if not pasta.exists():
         return []
     return sorted(p for p in pasta.rglob("*")
-                  if p.is_file() and p.suffix.lower() in EXTENSOES and not p.name.startswith(".")
+                  if p.is_file() and not p.is_symlink() and p.suffix.lower() in EXTENSOES
+                  and not any(parte.startswith(".") for parte in p.relative_to(pasta).parts)
                   and p.name.lower() not in IGNORADOS)
+
+
+def _catalogo_fontes(pasta: Path) -> dict[str, str]:
+    """Lê apenas o catálogo explícito; não abre URLs nem caminhos citados na tabela."""
+    arquivo = pasta / "FONTES.md"
+    if arquivo.is_symlink():
+        raise ValueError("FONTES.md não pode ser link simbólico")
+    if not arquivo.exists():
+        return {}
+    fontes = {}
+    for linha in arquivo.read_text(encoding="utf-8").splitlines():
+        campos = [c.strip().strip("`") for c in linha.strip().strip("|").split("|")]
+        if len(campos) >= 2 and Path(campos[0]).suffix.lower() in EXTENSOES:
+            fontes[campos[0]] = campos[1]
+    return fontes
 
 
 # ---------------------------------------------------------------------------
@@ -122,28 +139,34 @@ def listar_documentos(pasta: Path) -> list[Path]:
 def quebrar_em_trechos(texto: str, tamanho: int = 700) -> list[str]:
     """Junta parágrafos até ~``tamanho`` caracteres. Títulos Markdown (#) são
     repetidos no início dos trechos seguintes, para não perder o contexto."""
+    if tamanho < 40:
+        raise ValueError("Tamanho de trecho deve ser pelo menos 40 caracteres")
     texto = texto.replace("\r", "")
     paragrafos = [re.sub(r"[ \t]+", " ", p).strip() for p in re.split(r"\n\s*\n", texto)]
-    paragrafos = [p for p in paragrafos if p]
-    trechos, atual, titulo = [], "", ""
-    for p in paragrafos:
-        if p.startswith("#"):
-            if atual and atual != titulo:   # não guarda trecho que é só um título
-                trechos.append(atual)
-            titulo = p.lstrip("#").strip()
-            atual = titulo
+    trechos, atual, titulos = [], "", {}
+    for p in filter(None, paragrafos):
+        cabecalho = re.match(r"^(#{1,6})\s+(.+)$", p)
+        if cabecalho:
+            if atual:
+                trechos.append((prefixo + "\n" + atual).strip())
+                atual = ""
+            nivel = len(cabecalho[1])
+            titulos = {n: t for n, t in titulos.items() if n < nivel}
+            titulos[nivel] = cabecalho[2]
             continue
-        if atual and len(atual) + len(p) + 1 > tamanho:
-            trechos.append(atual)
-            atual = f"{titulo}\n{p}" if titulo else p
-        else:
-            atual = f"{atual}\n{p}" if atual else p
-        while len(atual) > 1.6 * tamanho:  # parágrafo gigante (ex.: PDF sem quebras)
-            corte = atual.rfind(" ", 0, tamanho) if " " in atual[:tamanho] else tamanho
-            trechos.append(atual[:corte])
-            atual = atual[corte:].strip()
-    if atual and atual != titulo:
-        trechos.append(atual)
+        prefixo = " — ".join(titulos[n] for n in sorted(titulos))[:tamanho // 2]
+        limite = tamanho - len(prefixo) - (1 if prefixo else 0)
+        if atual and len(atual) + len(p) + 1 > limite:
+            trechos.append((prefixo + "\n" + atual).strip())
+            atual = ""
+        while len(p) > limite:
+            corte = p.rfind(" ", 0, limite + 1)
+            corte = corte if corte > 0 else limite
+            trechos.append((prefixo + "\n" + p[:corte]).strip())
+            p = p[corte:].strip()
+        atual = (atual + "\n" + p).strip()
+    if atual:
+        trechos.append((prefixo + "\n" + atual).strip())
     return trechos
 
 
@@ -211,6 +234,11 @@ class BaseConhecimento:
         h = hashlib.sha256(json.dumps(config.conhecimento, sort_keys=True).encode())
         h.update(str(VERSAO_INDICE).encode())
         h.update(Path(__file__).read_bytes())   # mudou o código da base? recria também
+        catalogo = pasta / "FONTES.md"
+        if catalogo.is_symlink():
+            raise ValueError("FONTES.md não pode ser link simbólico")
+        if catalogo.exists():
+            h.update(catalogo.read_bytes())  # proveniência também invalida o cache
         for arq in listar_documentos(pasta):
             h.update(str(arq.relative_to(pasta)).encode())
             h.update(hashlib.sha256(arq.read_bytes()).digest())
@@ -227,7 +255,8 @@ class BaseConhecimento:
                 f"Nenhum documento em {pasta}. Coloque arquivos .pdf/.md/.txt/.html lá "
                 "(ver documentos/LEIAME.md).")
         intencoes = set(config.nomes_intencoes)
-        trechos = []
+        trechos, textos_busca = [], []
+        fontes = _catalogo_fontes(pasta)
         for arq in arquivos:
             rel = arq.relative_to(pasta)
             pasta_pai = rel.parts[0] if len(rel.parts) > 1 else GERAL
@@ -235,15 +264,18 @@ class BaseConhecimento:
             for texto, pagina in ler_documento(arq):
                 for t in quebrar_em_trechos(texto, cfg["tamanho_trecho"]):
                     if len(t) >= 30:
-                        trechos.append(Trecho(t, str(rel), intencao, pagina))
+                        origem = fontes.get(rel.as_posix(), "Origem não registrada; não presumir fonte oficial.")
+                        contexto = "Proveniência declarada em FONTES.md: " + origem[:700] + "\n\n" + t
+                        trechos.append(Trecho(contexto, str(rel), intencao, pagina))
+                        textos_busca.append(t)  # a autoridade não vira uma pista lexical artificial
         if not trechos:
             raise ValueError(f"Os documentos de {pasta} não têm texto extraível.")
         vetorizador = _criar_vetorizador(cfg)
-        matriz = _normalizar_linhas(vetorizador.fit_transform([t.texto for t in trechos]))
+        matriz = _normalizar_linhas(vetorizador.fit_transform(textos_busca))
         base = cls(trechos, vetorizador, matriz, cls.assinatura_atual(config), cfg)
         if verbose:
             print(f"[base de conhecimento] {len(arquivos)} documento(s) -> {len(trechos)} trechos "
-                  f"({cfg['representacao']}); índice salvo em {cls.arquivo_indice(config)}")
+                  f"({cfg['representacao']}); construído em memória, destino: {cls.arquivo_indice(config)}")
         return base
 
     def salvar(self, caminho: Path) -> None:
@@ -275,21 +307,26 @@ class BaseConhecimento:
                minimo: float | None = None) -> list[tuple[Trecho, float]]:
         """Os ``k`` trechos mais parecidos com a pergunta, com a similaridade (0 a 1).
 
-        Com ``intencao``, só entram trechos daquela intenção ou de ``geral``; se o
-        filtro não deixar nenhum trecho, a busca é refeita sem ele.
+        Com ``intencao``, só entram trechos daquela intenção ou de ``geral``.
+        Ausência de candidatos não relaxa o filtro para outros assuntos.
         """
-        k = k or self.cfg["k"]
+        k = self.cfg["k"] if k is None else k
         minimo = self.cfg["similaridade_minima"] if minimo is None else minimo
+        if not isinstance(k, int) or k <= 0 or not 0 <= minimo <= 1:
+            raise ValueError("k deve ser positivo e similaridade mínima deve estar entre 0 e 1")
+        if not pergunta.strip():
+            return []
         q = _normalizar_linhas(self.vetorizador.transform([pergunta]))
         produto = self.matriz @ q.T            # vetores normalizados: produto escalar = cosseno
         sims = produto.toarray().ravel() if hasattr(produto, "toarray") else np.asarray(produto).ravel()
         candidatos = np.arange(len(self.trechos))
         if intencao:
             filtrados = [i for i in candidatos if self.trechos[i].intencao in (intencao, GERAL)]
-            if filtrados:
-                candidatos = np.array(filtrados)
+            candidatos = np.array(filtrados, dtype=int)
+        if len(candidatos) == 0:
+            return []
         ordem = candidatos[np.argsort(sims[candidatos])[::-1]]
-        return [(self.trechos[i], float(sims[i])) for i in ordem[:k] if sims[i] >= minimo]
+        return [(self.trechos[i], float(sims[i])) for i in ordem[:k] if sims[i] > 0 and sims[i] >= minimo]
 
     def resumo(self):
         """Tabela (DataFrame) com quantos trechos há por documento e intenção."""
