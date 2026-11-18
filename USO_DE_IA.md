@@ -11,7 +11,7 @@
 
 Os registros 1–5 e a reflexão histórica foram preservados. As afirmações de revisão
 nesses registros pertencem ao relato anterior do grupo e não foram revalidadas
-nesta sessão. As novas entradas 6–12 não declaram revisão humana concluída.
+nesta sessão. As novas entradas 6–13 não declaram revisão humana concluída.
 
 ## 1. Ferramentas usadas
  
@@ -37,8 +37,9 @@ nesta sessão. As novas entradas 6–12 não declaram revisão humana concluída
 | 10 | Interpretação dos CSVs e planejamento de curadoria — Missão 02 | Codex calculou contagens e duplicatas em memória, sugeriu rótulos/exclusões e simulou divisões por envio e complementação do treino para os 48 envios humanos e a base de 132 linhas sintéticas | Parte de dados da Missão 02: avaliar qualidade, proveniência, independência dos conjuntos e quantidades adicionais, sem gerar frases | Contagens semânticas e divisão são propostas da IA, sem aprovação humana registrada. Nenhum CSV foi alterado ou congelado. A geração original da base sintética não é atribuída ao Codex por esta entrada |
 | 11 | Contrato compartilhado e atualização desta declaração — Missão 03 | Codex leu o enunciado correto de 29 páginas e interfaces existentes e redigiu com assistência generativa `docs/CONTRATOS_COMPARTILHADOS.md`, distinguindo requisitos oficiais de decisões internas; preparou esta atualização preservando os registros anteriores | “MISSÃO 03 — Formalização definitiva dos contratos do RANGOT”: conferir o PDF, formalizar o contrato e registrar a assistência, com alterações restritas a dois documentos | Implementação documental autorizada nesta missão; revisão humana do texto ainda pendente. Não houve geração de frases, treinamento, chamada ao OpenRouter ou avaliação final; a situação da gravação e dos commits é informada no relatório da missão |
 | 12 | Auditoria científica reproduzível — Missão 04 | Codex implementou auditoria offline em `scripts/auditar_dados.py`, testes com fixtures fictícias de software e `docs/PROTOCOLO_DADOS.md`; reutilizou a normalização existente, preparou manifesto sem textos e propostas automáticas pendentes de revisão, sem formar conjuntos finais | “MISSÃO 04 — Implementação da auditoria científica dos dados do RANGOT”: ler brutos sem modificá-los, sinalizar qualidade/duplicatas, avaliar divisões por envio e validar mínimos com testes offline | Implementação autorizada em quatro arquivos; testes e resultados da execução são informados no relatório da missão. Revisão humana de código, rótulos e divisão permanece pendente. Fixtures são exclusivas dos testes de software, não frases para os CSVs científicos; sem treinamento, avaliação final ou OpenRouter |
+| 13 | Fluxo de revisão humana — Missão 05 | Codex estendeu o auditor existente para exportar planilha local ignorada com textos originais e decisões pendentes, validar/importar decisões declaradas, recontar aprovadas e simular divisões por envio; acrescentou testes fictícios e documentação, sem aprovar rótulos nem criar conjuntos oficiais | “MISSÃO 05 — Curadoria humana e preparação dos conjuntos do RANGOT”: preservar textos/origens, permitir correções humanas, manter revisão privada e reavaliar 29/19, 30/18 e 31/17 sem modelos | Implementação e preparação da planilha autorizadas; decisões e aprovação da divisão pertencem ao responsável humano e começam pendentes. Testes e verificações técnicas são informados no relatório da missão. Nenhum treinamento, avaliação final, geração para os CSVs científicos ou OpenRouter foi executado |
 
-Os resumos das entradas 8–12 correspondem às instruções desta conversa; suas
+Os resumos das entradas 8–13 correspondem às instruções desta conversa; suas
 íntegras não estão arquivadas no repositório. Os resumos retrospectivos 6–7
 registram o relato do responsável, sem reconstruir prompts anteriores como se
 fossem transcrições verificadas.
@@ -48,7 +49,7 @@ fossem transcrições verificadas.
 As três afirmações históricas abaixo são preservadas do relato anterior; esta
 sessão não comprova a autoria externa desses materiais. Não estender essas
 afirmações à triagem dos CSVs ou à redação deste contrato, que receberam apoio
-generativo conforme as entradas 8–12.
+generativo conforme as entradas 8–13.
  
 - Escolha do tema e definição das intenções (feitas pelo grupo na proposta de 23/10/2026).
 - Informação sobre as formas de pagamento (débito, crédito, Pix).
@@ -73,6 +74,12 @@ Na Missão 04, a assistência passou da auditoria em memória para uma implement
 reproduzível e seus testes de software. As regras lexicais explicitam limitações
 e mantêm sugestões sem aprovação humana; divergências em relação às contagens
 anteriores precisam ser revisadas, sem ajustar as regras para forçar uma divisão.
+
+Na Missão 05, a IA implementou a preparação e a validação da planilha de revisão,
+preservando os textos originais e separando sugestões de decisões explicitamente
+declaradas pelo responsável. A existência da planilha e a aprovação dos testes de
+software não significam que as frases ou a divisão de treino/teste foram aprovadas
+por humanos; essa revisão permanece pendente.
 
 ## 5. Pendências para fechar a declaração
 

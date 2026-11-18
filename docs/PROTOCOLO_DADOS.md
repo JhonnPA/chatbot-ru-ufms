@@ -2,10 +2,12 @@
 
 ## Escopo e autoridade
 
-A Missão 04 autoriza somente `scripts/auditar_dados.py`,
+A implementação iniciada na Missão 04 e estendida na Missão 05 autoriza somente
+`scripts/auditar_dados.py`,
 `tests/test_auditar_dados.py`, este protocolo e `USO_DE_IA.md`, na branch
 `feature/curadoria-dados-rangot`. Os limites da Missão 03 registrados no contrato
-são históricos; esta missão não autoriza formar os conjuntos finais.
+são históricos; esta missão não autoriza formar os conjuntos finais. A Missão 05
+também autoriza a planilha local ignorada `dados/_brutos/revisao_humana.csv`.
 
 Fonte científica: [enunciado oficial](../referencias/_brutos/enunciado_professor.pdf),
 29 páginas, especialmente pp. 8–9, 17–20 e 22–27, e
@@ -44,8 +46,10 @@ O primeiro comando resume contagens e planos. O segundo emite em stdout o
 manifesto JSON completo, com células, rótulos propostos, motivos de revisão,
 grupos de duplicatas, proximidades e planos. Ambos omitem textos, cabeçalhos,
 timestamps e identificadores pessoais. Erros de entrada/argumentos não repetem
-conteúdo recebido. Nenhum comando da ferramenta grava arquivos, cria conjuntos
-ou atualiza o Git. `-B` e a configuração do carregador evitam caches Python.
+conteúdo recebido. A auditoria e a importação de decisões não gravam arquivos.
+Somente `--exportar-revisao` cria a planilha privada descrita abaixo; nenhum modo
+cria os conjuntos oficiais ou atualiza o Git. `-B` e a configuração do carregador
+evitam caches Python.
 
 A opção `--envios-teste` aceita uma lista de números de envio separados por
 vírgula, sem espaços. Ela simula somente a divisão explicitamente informada,
@@ -69,8 +73,9 @@ python3 -I -B scripts/auditar_dados.py --manifesto > dados/_brutos/auditoria_man
 ```
 
 Essa gravação é opcional e manual. Não adicionar o manifesto bruto a commits.
-A ferramenta não oferece exportação de textos; o revisor consulta cada célula no
-CSV local pelo ID. Não enviar os brutos ou possíveis mensagens de teste a sessões
+O manifesto JSON não exporta textos; a planilha privada de revisão, disponível
+desde a Missão 05, contém os textos originais. Não enviar os brutos ou possíveis
+mensagens de teste a sessões
 de geração sintética. Os logs públicos contêm apenas contagens e referências técnicas.
 
 ## Propostas automáticas e revisão humana
@@ -90,10 +95,12 @@ recebem também `colunas_conflitantes`, mantendo a decisão humana pendente.
 Esses sinais são incompletos: regras lexicais podem
 errar com gírias, negações, elipses, ironia, erros de digitação e perguntas implícitas.
 
-Todas as células, inclusive as candidatas, têm `revisao_humana=pendente` e
-`aprovado=false`. “Candidata” significa apenas passagem pelos filtros automáticos;
+Na auditoria automática, todas as células, inclusive as candidatas, têm
+`revisao_humana=pendente` e `aprovado=false`. “Candidata” significa apenas passagem
+pelos filtros automáticos;
 não significa frase válida aprovada, qualidade semântica garantida ou teste congelado.
-Não há importação de aprovações nem comando para marcar aprovação nesta versão.
+Desde a Missão 05, `--importar-revisao` reconhece somente decisões explicitamente
+declaradas no CSV privado; não converte sugestões ou campos vazios em aprovações.
 
 O responsável deve revisar texto, rótulo, intenção dominante, proveniência e avisos.
 Mensagens sem rótulo justificável ficam pendentes; não usar `esclarecer` como classe
@@ -152,6 +159,115 @@ Reportam-se separadamente estoque sintético, falta por classe e necessidade de
 origem humana. Havendo complemento indicado, o plano é condicionado à obtenção,
 revisão e deduplicação futuras dessas frases; nada é gerado ou selecionado como
 conjunto final. Mesmo um plano numericamente viável continua sem aprovação humana.
+
+## Revisão humana — Missão 05
+
+### Planilha privada e preservação
+
+Arquivo: `dados/_brutos/revisao_humana.csv`, CSV UTF-8 com cabeçalho e vírgulas.
+O caminho deve continuar ignorado e não versionado; exportação e importação
+verificam essa condição e recusam links simbólicos. A criação é exclusiva:
+arquivo existente nunca é sobrescrito, mesmo que ainda esteja pendente.
+
+Foram preparadas **1.711 linhas**, uma por resposta preenchida: 479 humanas e
+1.232 sintéticas. As 89 células vazias ficam fora da planilha. Duplicatas continuam
+em linhas próprias para permitir julgamento individual; as contagens de capacidade
+são deduplicadas depois. Todos os campos `decisao_humana` começam em `pendente`,
+e `rotulo_revisado`, `uso_autorizado` e observações começam vazios.
+
+| Campo | Regra |
+|---|---|
+| `id_resposta` | ID fonte/envio/coluna já usado pelo auditor. Imutável. |
+| `id_envio` | Fonte e posição original do envio, sem identificação pessoal. Imutável. |
+| `fonte_original`, `origem`, `coluna_original` | Procedência e posição; não podem ser editadas. |
+| `texto_original` | Valor lógico exato da resposta no bruto, incluindo espaços e quebras de linha; não editar. |
+| `rotulo_sugerido` | Sugestão automática original, não aprovação. Imutável. |
+| `motivo_sinalizacao` | Avisos e IDs relacionados a duplicatas/quase duplicatas/paráfrases. Imutável. |
+| `sha256_fonte` | Vincula a linha à versão exata do arquivo de origem. Imutável. |
+| `rotulo_revisado` | Editável: uma das seis intenções, `chitchat` ou `fora_dominio`. |
+| `decisao_humana` | Editável: `aprovar`, `corrigir`, `rejeitar`, `pendente` ou vazio. |
+| `uso_autorizado` | Editável: `treino`, `teste`, `ambos` ou vazio, respeitando a origem. |
+| `observacoes_revisao` | Editável: justificativa sem dados pessoais; não aparece no JSON público. |
+
+O auditor antigo aparava espaços para comparação; o exportador recupera os
+valores exatos dos snapshots CSV, sem modificar essa funcionalidade existente.
+Nenhum campo temporal ou metadado pessoal do formulário é copiado. Células com
+sinais de e-mail, número longo, autoidentificação ou início de fórmula de planilha
+ficam fora da exportação, com sinalização por ID. Esses filtros são heurísticos;
+o responsável deve evitar introduzir dados pessoais também nas observações.
+Respostas retidas por privacidade não são reescritas para parecerem originais.
+
+### Como revisar
+
+1. Abra o arquivo **localmente**, importando como UTF-8, separado por vírgula e
+   preservando os campos como texto. Não envie a planilha a sessões de geração.
+2. Altere somente os quatro campos editáveis. Pode ordenar/filtrar linhas, mas
+   não remover linhas, alterar IDs, cabeçalho, texto, origem ou versão.
+3. Use `aprovar` para aceitar o rótulo sugerido, inclusive quando uma heurística
+   havia barrado a frase. Nesse caso, o rótulo revisado pode ficar vazio ou repetir
+   o sugerido. A decisão precisa ser explicitamente digitada pelo responsável.
+4. Use `corrigir` com rótulo revisado válido para trocar a classificação ou rotular
+   resposta sem sugestão. Não alterar o texto para facilitar a classificação.
+5. Use `rejeitar` para excluir do aproveitamento; não apagar a linha. Use
+   `pendente`/vazio quando não houver decisão. Um rótulo preenchido sem decisão
+   de aprovação/correção continua fora das contagens aprovadas.
+6. Avalie múltiplas intenções, contexto implícito e mensagens sem intenção clara.
+   Se não houver rótulo único justificável, rejeite ou mantenha pendente.
+   `dominio` e `esclarecer` não são rótulos permitidos para essas mensagens.
+7. Consulte os IDs relacionados em `motivo_sinalizacao` para analisar duplicatas.
+   Duplicatas normalizadas aprovadas devem ter o mesmo rótulo; conflitos impedem
+   a importação, em vez de escolher silenciosamente a primeira classificação.
+8. Salve como CSV UTF-8 com vírgulas e execute a importação. Edição de texto,
+   origem, metadados ou versão, IDs repetidos/desconhecidos, linhas ausentes e
+   decisões/rótulos inválidos fazem a importação falhar com código técnico e ID.
+
+Rótulos permitidos: `cardapio`, `horarios`, `valores`, `recarga_creditos`,
+`cadastro`, `regras_uso`, `chitchat` e `fora_dominio`. A importação aceita revisão
+parcial: linhas ainda pendentes permanecem na planilha e não entram nas contagens
+aprovadas. O arquivo registra decisões declaradas pelo responsável, sem autenticar
+a identidade de quem o editou.
+
+### Uso de cada exemplo e comparação dos planos
+
+Em `uso_autorizado`, humanas podem receber `treino`, `teste` ou `ambos`.
+Vazio não impõe restrição adicional à simulação, mas **não aprova uma divisão**.
+Sintéticas aceitam somente vazio ou `treino`: nunca podem ir para teste. A decisão
+sobre o rótulo e a aprovação da divisão são etapas diferentes.
+
+Cada envio humano continua em um único lado da simulação. Se uma resposta
+aprovada tem uso incompatível com esse lado, ela não é transferida para o outro:
+seu ID aparece em `aprovadas_nao_alocadas_por_uso`. Assim, o revisor pode limitar
+individualmente o aproveitamento sem separar artificialmente um envio.
+
+```bash
+# Planilha deste checkout já preparada: revisar antes de aprovar decisões.
+python3 -I -B scripts/auditar_dados.py --importar-revisao
+
+# Mesmo protocolo, manifesto público sem textos/observações:
+python3 -I -B scripts/auditar_dados.py --importar-revisao --manifesto
+
+# Somente em checkout SEM a planilha; nunca sobrescreve revisões existentes:
+python3 -I -B scripts/auditar_dados.py --exportar-revisao
+```
+
+Sem `--importar-revisao`, a auditoria continua apresentando sugestões automáticas
+sem aprovações. Com a opção, as divisões principais usam **somente** decisões
+`aprovar`/`corrigir` importadas; as propostas automáticas ficam separadas em
+`divisoes_automaticas_nao_revisadas`. O resumo informa pendências por sugestão e
+origem, aprovadas distintas e o hash da planilha importada, sem publicar seus textos.
+
+A busca compara 29/19, 30/18 e 31/17, sem métricas de modelos; a opção
+`--envios-teste` continua permitindo simular um conjunto explícito de IDs.
+Reutilizam-se agrupamento, normalização, mínimos, proporções, quarentena de
+proximidade e detecção de sobreposição existentes. O resultado permanece uma
+simulação, com `divisao_aprovada=false` e `congelado=false`.
+
+No arquivo inicial há **zero decisões concluídas**, portanto zero exemplos
+aprovados para contabilizar treino/teste. Não se pode afirmar quantos serão
+aproveitados após a revisão nem quantas sintéticas adicionais serão necessárias.
+Primeiro importar decisões reais e aprovar uma divisão; somente em missão
+posterior autorizada construir os CSVs oficiais e suprir faltas, usando apenas
+o treino aprovado para orientar eventual geração.
 
 ## Evidências e próximos passos
 
