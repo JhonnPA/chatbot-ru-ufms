@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440">
+<style>text{font:14px sans-serif;fill:#203240}.axis{stroke:#52636f;fill:none}.grid{stroke:#dce4e8}</style>
+<title>A1 — cinco folds comuns; média e desvio do F1 macro</title><rect width="1000" height="440" fill="white"/>
+<text x="500" y="28" text-anchor="middle" style="font-size:19px">A1 — cinco folds comuns; média e desvio do F1 macro</text>
+<line x1="140.000" y1="355.000" x2="850.000" y2="355.000" class="grid"/>
+<text x="125" y="360.000" text-anchor="end">0.0</text>
+<line x1="140.000" y1="301.000" x2="850.000" y2="301.000" class="grid"/>
+<text x="125" y="306.000" text-anchor="end">0.2</text>
+<line x1="140.000" y1="247.000" x2="850.000" y2="247.000" class="grid"/>
+<text x="125" y="252.000" text-anchor="end">0.4</text>
+<line x1="140.000" y1="193.000" x2="850.000" y2="193.000" class="grid"/>
+<text x="125" y="198.000" text-anchor="end">0.6</text>
+<line x1="140.000" y1="139.000" x2="850.000" y2="139.000" class="grid"/>
+<text x="125" y="144.000" text-anchor="end">0.8</text>
+<line x1="140.000" y1="85.000" x2="850.000" y2="85.000" class="grid"/>
+<text x="125" y="90.000" text-anchor="end">1.0</text>
+<rect x="285" y="116.832" width="130" height="238.168" fill="#24608a"/>
+<line x1="350.000" y1="113.050" x2="350.000" y2="120.613" class="axis"/>
+<line x1="338.000" y1="113.050" x2="362.000" y2="113.050" class="axis"/>
+<line x1="338.000" y1="120.613" x2="362.000" y2="120.613" class="axis"/>
+<text x="350" y="101.050" text-anchor="middle">0.8821 ± 0.0140</text>
+<text x="350" y="385" text-anchor="middle">Cascata</text>
+<rect x="585" y="116.019" width="130" height="238.981" fill="#bf622a"/>
+<line x1="650.000" y1="110.912" x2="650.000" y2="121.125" class="axis"/>
+<line x1="638.000" y1="110.912" x2="662.000" y2="110.912" class="axis"/>
+<line x1="638.000" y1="121.125" x2="662.000" y2="121.125" class="axis"/>
+<text x="650" y="98.912" text-anchor="middle">0.8851 ± 0.0189</text>
+<text x="650" y="385" text-anchor="middle">Único — oito classes</text>
+<text x="500" y="418" text-anchor="middle">CV de treinamento; não é avaliação independente ou teste final</text>
+</svg>
