@@ -645,6 +645,96 @@ Não treina, não gera frases, não executa avaliadores e não altera o teste co
 Somente as cinco candidatas novas e as pendências específicas exigem conferência
 adicional; não repetir a revisão ratificada nem reabrir o teste para melhoria de modelos.
 
+## Incorporação ratificada e complemento isolado — Missão 07C
+
+O responsável declarou ter conferido as cinco frases e seus rótulos e autorizou
+expressamente apenas sua incorporação ao treino: `S0004:C05`, `S0009:C05`,
+`S0025:C05` (`recarga_creditos`), `S0004:C06` e `S0005:C06` (`cadastro`).
+Foram conferidos individualmente IDs, textos contra a fonte sintética original,
+rótulos e hashes de texto. A origem continua `llm`; não houve reescrita.
+As famílias relacionadas já sinalizadas foram aceitas pelo responsável e devem
+ser consideradas no agrupamento para a futura validação cruzada.
+
+A ratificação está em `dados/_brutos/ratificacao_07c.json`, vinculada ao hash da
+planilha de cinco candidatas, da fonte original, do manifesto anterior e da cópia
+aprovada `candidatas_aprovadas_07c.csv`. Esta cópia registra `aprovar`, o rótulo
+conferido e a origem humana expressa da aprovação. Os snapshots 07A/07B foram
+preservados: o estado pendente das cinco no arquivo 07B é histórico, substituído
+somente para esses IDs pela aprovação 07C. As outras 13 pendências não mudaram.
+
+O treinamento corrente é `dados/_brutos/treino_parcial_07c.csv`, com **425 frases**:
+**268 humanas e 157 LLM (63,06% humano)**. Seu manifesto privado é
+`dados/_brutos/manifesto_conjuntos_07c.json`, com seleção por IDs, composição,
+proveniência, hashes e vínculo com o manifesto 07B. O treino oficial permanece
+somente com cabeçalho até completar os mínimos com candidatas revisadas e autorizadas.
+
+| Classe | Treino autorizado | Complemento necessário |
+|---|---:|---:|
+| cardapio | 50 | 0 |
+| horarios | 50 | 0 |
+| valores | 50 | 0 |
+| recarga_creditos | 49 | 1 |
+| cadastro | 45 | 5 |
+| regras_uso | 43 | 7 |
+| chitchat | 46 | 54 |
+| fora_dominio | 92 | 58 |
+| **Total** | **425** | **125** |
+
+Não há duplicatas normalizadas no treino nem interseções normalizadas com o teste;
+as cinco adições não apresentaram sinais de proximidade problemática com o teste
+no detector existente. O teste de 160 humanas não foi alterado e conserva SHA-256
+`fa760e167d565a9a3e5bd015465c4ec945f7855e0bd78b5542dc561e21ea9b81`.
+Com 125 complementos LLM aprovados, a projeção é 550 frases e **48,73% humano**.
+
+### Transferência mínima para geração futura
+
+O pacote atual é `dados/_brutos/pacote_treinamento_07c/`, contendo exclusivamente
+`INSTRUCOES.md` e `treino_autorizado.csv` (as mesmas 425 frases do parcial).
+Inclui definições públicas das oito classes, quotas, diversidade, negativos difíceis,
+revisão e registro dos prompts integrais, modelo real e proveniência por lote.
+Não contém mensagens ou manifesto do teste, formulário completo ou credenciais.
+O pacote 07B e seu verificador continuam históricos; não representam o treino corrente.
+
+**Comandos manuais, não executados nesta missão.** Neste checkout, empacotar somente
+os dois arquivos explicitamente permitidos:
+
+```bash
+tar -czf /tmp/rangot-geracao-07c.tar.gz \
+  -C dados/_brutos/pacote_treinamento_07c \
+  INSTRUCOES.md treino_autorizado.csv
+```
+
+Transferir somente esse arquivo para outro computador ou VM sem o checkout,
+sem pastas compartilhadas e sem volumes do host montados. Uma nova sessão ou
+diretório no mesmo host com acesso ao teste não atende ao isolamento exigido.
+Não copiar configurações do agente, credenciais ou histórico desta conversa.
+No ambiente separado, ajustar o caminho do arquivo recebido e executar:
+
+```bash
+mkdir -m 700 rangot-geracao-07c
+tar -xzf /caminho/recebido/rangot-geracao-07c.tar.gz \
+  -C rangot-geracao-07c INSTRUCOES.md treino_autorizado.csv
+cd rangot-geracao-07c
+cat INSTRUCOES.md
+```
+
+Na ferramenta de IA escolhida pelo responsável nesse ambiente, iniciar uma conversa
+nova e fornecer exclusivamente os dois arquivos, usando `INSTRUCOES.md` como
+instrução integral. A escolha e identificação real do modelo devem ser registradas;
+nenhuma ferramenta geradora ou execução futura é declarada como já realizada.
+Não há chamada ao OpenRouter neste procedimento. A saída prevista é
+`candidatas_complemento.csv` com `texto,intencao,origem`, 125 candidatas nas quotas
+acima e sempre `origem=llm`, acompanhada de `registro_geracao.md` com prompts,
+respostas originais e identificação por lote.
+
+Devolver somente as candidatas e esse registro ao curador. Cada frase requer revisão
+semântica, de origem, duplicatas e famílias de paráfrases contra o treino; o curador
+confere separadamente possíveis interseções com o teste, sem revelar suas mensagens
+ao gerador. Só então incorporar o complemento autorizado e verificar os mínimos
+50 por intenção, 100 chitchat, 150 fora_dominio e 20% humano/coletado. Não preencher
+quotas com mensagens ambíguas nem promover textos LLM a humanos. Não houve geração,
+treinamento de classificadores, avaliação final ou criação do ambiente externo nesta missão.
+
 ## Evidências e próximos passos
 
 O script confere novamente os bytes dos dois arquivos ao terminar e falha se uma

@@ -15,6 +15,8 @@ nesta sessão. As entradas 6–15 não declaram revisão manual individual concl
 a entrada 15 registra curadoria por IA sob autorização expressa delegada.
 A conferência humana posterior das 709 decisões foi declarada pelo responsável
 na Missão 07B e está registrada na entrada 16, preservando esse histórico.
+A conferência e autorização específica das cinco candidatas adicionais pelo
+responsável na Missão 07C estão registradas na entrada 17.
 
 ## 1. Ferramentas usadas
  
@@ -44,8 +46,9 @@ na Missão 07B e está registrada na entrada 16, preservando esse histórico.
 | 14 | Ampliação da base e curadoria prioritária — Missão 06 | Codex comparou as versões e backups sem depender da ordem, implementou migração rastreável de decisões, examinou semanticamente as 669 respostas humanas e preparou sugestões privadas por ID/hash, uma revisão ampliada pendente e uma seleção prioritária com proposta de divisão por envio | “MISSÃO 06 — Atualizar a base humana para 67 envios e preparar a curadoria definitiva”: verificar preservação dos 48 envios e 19 adições, preservar origens/textos, planejar mínimos sem modelos e facilitar revisão humana | Código, testes e documentação implementados; a gravação nativa da substituição foi bloqueada pelo sandbox antes de alterar base/revisão ativas. Arquivos privados da nova revisão e proposta preparados pelo editor. Rótulos e divisão continuam sem aprovação humana. Sem treinamento, avaliação final, geração adicional de dados científicos ou OpenRouter |
 | 15 | Curadoria semântica com aprovação delegada — Missão 07A | Codex, família GPT-6 informada nesta sessão, variante exata não exposta, leu individualmente as 654 candidatas e 55 suplentes/complementos incorporados; registrou 575 aprovações delegadas, cinco correções, 116 rejeições e 13 pendências; implementou ledger privado, validação e importação com proveniência, testes fictícios e documentação | “MISSÃO 07A — Curadoria semântica com aprovação delegada pelo responsável”: autorização expressa para decidir individualmente e registrar aprovações, com origem IA declarada, sem atribuir revisão manual individual ao responsável | O responsável declarou ter examinado o CSV e delegou decisões; não confirmou leitura individual de todas as frases. Revisão mestre importada com observações de delegação e backups preservados. Teste proposto com 160 textos humanos originais; treino com 420 exemplos e falta de 130 pelos critérios adotados. Persistem 13 pendências e não houve congelamento, construção dos CSVs oficiais, treinamento, avaliação final, geração adicional de frases científicas ou OpenRouter |
 | 16 | Ratificação humana e preparação dos conjuntos — Missão 07B | Codex registrou a conferência expressa do responsável, validou o snapshot ratificado, materializou e congelou 160 textos humanos originais em dados/teste.csv, exportou treino parcial autorizado de 420 exemplos e pacote exclusivo de treinamento, e investigou reaproveitamento da base sintética com cinco novas candidatas separadas para conferência | “MISSÃO 07B — Ratificar a curadoria e construir os conjuntos do RANGOT”: preservar as 709 decisões ratificadas, manter pendências excluídas, congelar teste após validação, buscar reaproveitamento e isolar o material da futura geração | O responsável declarou leitura integral e concordância com 575 aprovações, cinco correções, 116 rejeições e 13 pendências. Essa conferência posterior não altera a autoria delegada histórica das decisões da Missão 07A. As cinco novas candidatas permanecem pendentes e não entram no treino autorizado. Treino oficial ainda incompleto; sem geração de frases científicas, treinamento de modelos, avaliadores ou OpenRouter |
+| 17 | Incorporação de cinco candidatas e pacote isolado — Missão 07C | Codex validou IDs, textos, rótulos, hashes e ausência de duplicatas/vazamento das cinco candidatas já existentes, registrou a ratificação humana específica, preparou treino parcial de 425 frases e pacote exclusivo de treinamento com déficit recalculado e procedimento de isolamento | “MISSÃO 07C — Incorporar cinco candidatas aprovadas e preparar complementação isolada do treinamento”: incorporar exclusivamente as cinco frases conferidas pelo responsável, preservar origem llm e teste congelado, preparar complemento sem gerar nesta sessão | O responsável declarou ter conferido as cinco frases e rótulos e autorizou expressamente seu uso. Foram incorporadas três recarga_creditos e duas cadastro, preservando textos e origem llm. Snapshots e decisões anteriores foram preservados. Faltam 125 exemplos; não houve geração, criação do ambiente externo, treinamento de modelos, avaliação final ou OpenRouter |
 
-Os resumos das entradas 8–16 correspondem às instruções desta conversa; suas
+Os resumos das entradas 8–17 correspondem às instruções desta conversa; suas
 íntegras não estão arquivadas no repositório. Os resumos retrospectivos 6–7
 registram o relato do responsável, sem reconstruir prompts anteriores como se
 fossem transcrições verificadas.
@@ -55,7 +58,7 @@ fossem transcrições verificadas.
 As três afirmações históricas abaixo são preservadas do relato anterior; esta
 sessão não comprova a autoria externa desses materiais. Não estender essas
 afirmações à triagem dos CSVs ou à redação deste contrato, que receberam apoio
-generativo conforme as entradas 8–16.
+generativo conforme as entradas 8–17.
  
 - Escolha do tema e definição das intenções (feitas pelo grupo na proposta de 23/10/2026).
 - Informação sobre as formas de pagamento (débito, crédito, Pix).
@@ -95,7 +98,7 @@ mostrando que a capacidade anterior era provisória. A delegação não dispensa
 grupo de compreender e justificar o material, nem permite declarar que todos os
 conjuntos estão completos enquanto persistirem as faltas documentadas.
 
-- Missões 07A/07B: levar ao artigo e ao vídeo a autoria delegada inicial das decisões e a conferência humana posterior expressamente declarada. As 13 pendências permanecem excluídas; o teste já foi congelado. O treino tem 420 exemplos autorizados e falta de 130. Conferir as cinco novas candidatas existentes antes de definir o complemento final; nenhuma foi abrangida pela ratificação anterior.
+- Missões 07A/07B/07C: levar ao artigo e ao vídeo a autoria delegada inicial das decisões, a conferência humana posterior das 709 decisões e a aprovação humana específica das cinco candidatas adicionais. As 13 pendências permanecem excluídas; o teste congelado foi preservado. O treino corrente tem 425 exemplos autorizados (268 humanos e 157 LLM) e faltam 125. A geração futura exige ambiente separado sem acesso ao teste, registro de prompts/modelo e revisão individual antes da incorporação.
 
 - Missão 06 (histórico): a incorporação dos 67 envios foi observada concluída antes da Missão 07A. As projeções anteriores foram substituídas pela curadoria delegada registrada na entrada 15; não eram resultados de modelos nem revisão manual individual.
 
