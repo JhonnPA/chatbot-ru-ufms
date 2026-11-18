@@ -33,7 +33,7 @@ _texto = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_texto)
 normalizar = _texto.normalizar
 
-VERSAO = "3"
+VERSAO = "4"
 INTENCOES = ("cardapio", "horarios", "valores", "recarga_creditos", "cadastro", "regras_uso")
 CLASSES = INTENCOES + ("fora_dominio", "chitchat")
 MIN_TREINO = dict.fromkeys(INTENCOES, 50) | {"fora_dominio": 150, "chitchat": 100}
@@ -84,7 +84,11 @@ PRIVADOS = {
     "revisao_humana.csv", "revisao_humana_backup_1711.csv", "sinteticas_llm.csv",
     "migracao_48_67.json", "triagem_semantica_67.json", "plano_curadoria_67.json",
     "revisao_prioritaria.csv", "revisao_humana_67_preparada.csv", "migracao_48_67_preparada.json",
+    "revisao_prioritaria_backup_07a.csv", "revisao_humana_backup_07a.csv",
+    "plano_curadoria_67_backup_07a.json", "auditoria_delegada_07a.json",
 }
+ORIGEM_DELEGADA = "ia_sob_autorizacao_expressa"
+MARCADOR_DELEGADA = "origem_decisao=ia_delegada;autorizacao=missao_07a;"
 CAMPOS_PRIORIDADE = ("id_resposta", "texto_original", "origem", "rotulo_sugerido",
                      "uso_proposto", "sinalizacao", "sha256_contexto",
                      "decisao_humana", "rotulo_corrigido")
@@ -153,6 +157,7 @@ class AnaliseRevisada(Analise):
     decisao_humana: str = "pendente"
     uso_autorizado: str = ""
     rotulo_automatico: str | None = None
+    origem_decisao: str = "declaracao_csv_sem_atestacao"
 
     @property
     def candidata(self):
@@ -169,6 +174,10 @@ class AnaliseRevisada(Analise):
                          uso_autorizado=self.uso_autorizado,
                          revisao_humana=("pendente" if self.decisao_humana == "pendente"
                                          else "decisao_declarada_no_csv"), aprovado=self.candidata)
+        resultado["origem_decisao"] = self.origem_decisao
+        resultado["revisao_manual_individual"] = False if self.origem_decisao == ORIGEM_DELEGADA else None
+        if self.origem_decisao == ORIGEM_DELEGADA:
+            resultado["revisao_humana"] = "curadoria_ia_delegada"
         return resultado
 
 
@@ -300,7 +309,10 @@ def importar_revisao_fluxo(fluxo, esperadas):
                 if len(rotulos[normalizar(original["texto_original"])]) > 1:
                     raise ErroRevisao("duplicatas_com_rotulos_revisados_conflitantes", identificador)
             # Não carregar texto livre de observação para os relatórios públicos.
-            decisoes[identificador] = {"decisao": decisao, "rotulo": revisado, "uso": uso}
+            origem_decisao = (ORIGEM_DELEGADA if linha["observacoes_revisao"].startswith(MARCADOR_DELEGADA)
+                              else "declaracao_csv_sem_atestacao")
+            decisoes[identificador] = {"decisao": decisao, "rotulo": revisado, "uso": uso,
+                                      "origem_decisao": origem_decisao}
     except (csv.Error, UnicodeError) as exc:
         raise ErroRevisao("csv_revisao_invalido") from exc
     if set(decisoes) != set(esperadas):
@@ -312,7 +324,8 @@ def aplicar_revisoes(analises, decisoes):
     return [AnaliseRevisada(a.celula, decisoes.get(a.celula.id, {}).get("rotulo") or None,
                            a.evidencias, a.alertas,
                            decisoes.get(a.celula.id, {}).get("decisao", "pendente"),
-                           decisoes.get(a.celula.id, {}).get("uso", ""), a.sugerido)
+                           decisoes.get(a.celula.id, {}).get("uso", ""), a.sugerido,
+                           decisoes.get(a.celula.id, {}).get("origem_decisao", "declaracao_csv_sem_atestacao"))
             for a in analises]
 
 
@@ -596,7 +609,7 @@ def preparar_selecao_prioritaria(analises, plano, proximos, fontes, originais):
     return linhas, regras | {"sha256_contexto": contexto}
 
 
-def importar_prioritaria(fluxo, esperadas, linhas_mestre):
+def importar_prioritaria(fluxo, esperadas, linhas_mestre, proveniencias=None):
     leitor = csv.DictReader(fluxo, strict=True)
     if leitor.fieldnames != list(CAMPOS_PRIORIDADE):
         raise ErroRevisao("cabecalho_prioritaria_invalido")
@@ -614,7 +627,17 @@ def importar_prioritaria(fluxo, esperadas, linhas_mestre):
         d, rotulo = r["decisao_humana"].strip() or "pendente", r["rotulo_corrigido"].strip()
         if d not in DECISOES or (rotulo and rotulo not in CLASSES):
             raise ErroRevisao("decisao_prioritaria_invalida", identificador)
+        observacao = None
+        if proveniencias is not None:
+            p = proveniencias.get(identificador, {})
+            final = rotulo if d == "corrigir" else original["rotulo_sugerido"] if d == "aprovar" else None
+            if p.get("decisao") != d or p.get("rotulo_final") != final:
+                raise ErroRevisao("decisao_diverge_da_auditoria_delegada", identificador)
+            observacao = (MARCADOR_DELEGADA + "ferramenta=" + p["ferramenta"] + ";modelo=" + p["modelo"]
+                          + ";revisao_manual_individual=false; " + p["justificativa"])
         if d == "pendente":
+            if observacao is not None and mestre[identificador]["decisao_humana"] in {"", "pendente"}:
+                mestre[identificador]["observacoes_revisao"] = observacao
             continue
         if d == "aprovar" and rotulo and rotulo != original["rotulo_sugerido"]:
             raise ErroRevisao("troca_de_rotulo_exige_corrigir", identificador)
@@ -626,6 +649,8 @@ def importar_prioritaria(fluxo, esperadas, linhas_mestre):
         atualizada["decisao_humana"] = ("corrigir" if d == "aprovar" and escolhido != m["rotulo_sugerido"] else d)
         atualizada["rotulo_revisado"] = escolhido if d in {"aprovar", "corrigir"} else ""
         atualizada["uso_autorizado"] = original["uso_proposto"]
+        if observacao is not None:
+            atualizada["observacoes_revisao"] = observacao
         if m["decisao_humana"] not in {"", "pendente"} and m != atualizada:
             raise ErroRevisao("decisao_mestre_existente_nao_sobrescrever", identificador)
         mestre[identificador] = atualizada
@@ -737,7 +762,55 @@ def linhas_prioritarias_do_plano(plano, mestre, fontes, sha_triagem):
     return linhas
 
 
-def conferir_prioritaria_local(usar_exportacao_nova=False):
+def validar_auditoria_delegada(auditoria, linhas, mestre, fontes, anteriores):
+    """Vincula decisões de IA a autorização, textos, origens e versões; não autentica pessoas."""
+    if not isinstance(auditoria, dict):
+        raise ErroRevisao("auditoria_delegada_invalida")
+    autorizacao = auditoria.get("autorizacao", {})
+    if (not isinstance(autorizacao, dict) or auditoria.get("versao") != 1 or auditoria.get("origem_decisao") != ORIGEM_DELEGADA
+            or autorizacao.get("referencia") != "missao_07a"
+            or autorizacao.get("revisao_manual_individual") is not False
+            or autorizacao.get("responsavel_revisou_todas_as_frases") is not False
+            or auditoria.get("fontes") != fontes
+            or not auditoria.get("ferramenta") or not auditoria.get("modelo")):
+        raise ErroRevisao("autorizacao_ou_versao_da_delegacao_invalida")
+    registros = auditoria.get("registros", {})
+    ids = {r["id_resposta"] for r in linhas}
+    antigos = {r["id_resposta"]: r for r in anteriores}
+    originais = {r["id_resposta"]: r for r in mestre}
+    if not isinstance(registros, dict) or set(registros) != ids or not set(antigos) <= ids:
+        raise ErroRevisao("ids_da_delegacao_incompativeis")
+    for linha in linhas:
+        identificador = linha["id_resposta"]
+        if identificador not in originais:
+            raise ErroRevisao("delegacao_com_id_desconhecido")
+        r, original = registros[identificador], originais[identificador]
+        if not isinstance(r, dict):
+            raise ErroRevisao("registro_delegado_invalido", identificador)
+        anterior = antigos.get(identificador, original)["rotulo_sugerido"] or None
+        if (r.get("texto_original") != original["texto_original"]
+                or r.get("sha256_texto") != digest(original["texto_original"].encode())
+                or r.get("origem_frase") != original["origem"]
+                or r.get("uso_proposto") != linha["uso_proposto"]
+                or r.get("rotulo_anterior") != anterior
+                or r.get("rotulo_proposto") != linha["rotulo_sugerido"]
+                or r.get("origem_decisao") != ORIGEM_DELEGADA
+                or r.get("revisao_manual_individual") is not False
+                or r.get("ferramenta") != auditoria["ferramenta"] or r.get("modelo") != auditoria["modelo"]
+                or not isinstance(r.get("justificativa"), str) or not r["justificativa"].strip()
+                or impedimentos_revisao(r["justificativa"])):
+            raise ErroRevisao("registro_delegado_invalido", identificador)
+        ref = r.get("substitui")
+        if ref is not None:
+            if (identificador in antigos or ref not in antigos
+                    or registros[ref]["decisao"] not in {"rejeitar", "pendente", "corrigir"}
+                    or antigos[ref]["uso_proposto"] != linha["uso_proposto"]
+                    or antigos[ref]["rotulo_sugerido"] != r.get("rotulo_final")):
+                raise ErroRevisao("substituicao_delegada_invalida", identificador)
+    return registros
+
+
+def conferir_prioritaria_local(usar_exportacao_nova=False, delegada=False, aplicar=False):
     celulas, fontes, snapshots, bruto_mestre = contexto_curadoria(usar_exportacao_nova)
     esperadas, _ = preparar_revisao(celulas, snapshots, sinalizar_proximos(celulas))
     mestre = list(csv.DictReader(io.StringIO(bruto_mestre.decode("utf-8-sig"), newline="")))
@@ -746,16 +819,64 @@ def conferir_prioritaria_local(usar_exportacao_nova=False):
     linhas = linhas_prioritarias_do_plano(plano, mestre, fontes,
               digest(caminho_privado("triagem_semantica_67.json").read_bytes()))
     bruto = caminho_privado("revisao_prioritaria.csv").read_bytes()
-    novas = importar_prioritaria(io.StringIO(bruto.decode("utf-8-sig"), newline=""), linhas, mestre)
+    proveniencias, auditoria = None, None
+    # Um ledger delegado existente nunca deve ser ignorado por um comando legado.
+    delegada = delegada or caminho_privado("auditoria_delegada_07a.json").exists()
+    if delegada:
+        auditoria = json.loads(caminho_privado("auditoria_delegada_07a.json").read_bytes())
+        backup_mestre = caminho_privado("revisao_humana_backup_07a.csv").read_bytes()
+        backup_prioritaria = caminho_privado("revisao_prioritaria_backup_07a.csv").read_bytes()
+        backup_plano = caminho_privado("plano_curadoria_67_backup_07a.json").read_bytes()
+        if (digest(backup_mestre) != auditoria["sha256_mestre_antes"]
+                or digest(backup_prioritaria) != auditoria["sha256_prioritaria_antes"]
+                or digest(backup_plano) != auditoria["sha256_plano_antes"]
+                or digest(bruto) != auditoria["sha256_prioritaria_depois"]
+                or digest(caminho_privado("plano_curadoria_67.json").read_bytes()) != auditoria["sha256_plano_depois"]
+                or digest(bruto_mestre) not in {auditoria["sha256_mestre_antes"], auditoria["sha256_mestre_depois"]}):
+            raise ErroRevisao("hashes_da_delegacao_incompativeis")
+        anteriores = list(csv.DictReader(io.StringIO(backup_prioritaria.decode("utf-8-sig"), newline="")))
+        proveniencias = validar_auditoria_delegada(auditoria, linhas, mestre, fontes, anteriores)
+    novas = importar_prioritaria(io.StringIO(bruto.decode("utf-8-sig"), newline=""), linhas, mestre, proveniencias)
     f = io.StringIO(newline="")
     escrever_revisao_fluxo(f, novas)
     decisoes = importar_revisao_fluxo(io.StringIO(f.getvalue(), newline=""), esperadas)
     analises = aplicar_revisoes([analisar(c) for c in celulas], decisoes)
+    revisao_atualizada = f.getvalue().encode("utf-8-sig")
+    if delegada:
+        if digest(revisao_atualizada) != auditoria["sha256_mestre_depois"]:
+            raise ErroRevisao("resultado_da_delegacao_divergente")
+        aprovadas = [a for a in analises if a.candidata]
+        teste = [a for a in aprovadas if permitida_no_uso(a, "teste") and a.celula.envio in plano["envios_teste"]]
+        treino = [a for a in aprovadas if permitida_no_uso(a, "treino") and (
+            a.celula.fonte == "S" or a.celula.envio not in plano["envios_teste"])]
+        if any(a.celula.origem != "humano" for a in teste) or detectar_sobreposicao(treino, teste):
+            raise ErroRevisao("vazamento_na_delegacao")
+        ids_t, ids_h = {a.celula.id for a in treino}, {a.celula.id for a in teste}
+        for par in sinalizar_proximos(celulas):
+            if par["quase_duplicata"] and ((set(par["a"]) & ids_t and set(par["b"]) & ids_h)
+                                          or (set(par["b"]) & ids_t and set(par["a"]) & ids_h)):
+                raise ErroRevisao("quase_duplicata_entre_treino_e_teste")
     conferir_contexto(snapshots, usar_exportacao_nova)
-    return {"revisao": resumir_revisao(esperadas, decisoes), "gravacao_executada": False,
+    gravou = False
+    if aplicar:
+        if not delegada:
+            raise ErroRevisao("gravacao_exige_ledger_delegado")
+        if caminho_revisao_local().read_bytes() != bruto_mestre:
+            raise ErroRevisao("mestre_alterado_durante_importacao")
+        if bruto_mestre != revisao_atualizada:
+            gravar_privado("revisao_humana.csv", revisao_atualizada, substituir=True)
+            gravou = True
+    resultado = {"revisao": resumir_revisao(esperadas, decisoes), "gravacao_executada": gravou,
             "divisao_aprovada": False, "sha256_prioritaria": digest(bruto),
             "plano_somente_aprovadas": avaliar_divisao(analises, plano["envios_teste"], fontes["H"]["envios"],
                                                       sinalizar_proximos(celulas), quarentenar_duplicatas=True)}
+    if delegada:
+        resultado["curadoria_delegada"] = {"origem_decisao": ORIGEM_DELEGADA, "revisao_manual_individual": False,
+            "mestre_persistido": gravou or bruto_mestre == revisao_atualizada,
+            "analisadas_com_registro": len(proveniencias),
+            "decisoes_prioritarias": dict(Counter(p["decisao"] for p in proveniencias.values())),
+            "originais": len(anteriores), "suplentes": len(proveniencias) - len(anteriores)}
+    return resultado
 
 
 def ler_csv(fluxo, fonte):
@@ -1146,10 +1267,12 @@ def main(argv=None):
     revisao.add_argument("--planejar-curadoria", action="store_true", help="simular divisao com sugestoes semanticas privadas")
     revisao.add_argument("--exportar-prioritaria", action="store_true", help="criar plano e revisao reduzida sem sobrescrever")
     revisao.add_argument("--importar-prioritaria", action="store_true", help="validar revisao reduzida e recontar, sem gravar")
+    revisao.add_argument("--importar-delegada", action="store_true", help="validar ledger e decisoes delegadas sem gravar")
+    revisao.add_argument("--aplicar-delegada", action="store_true", help="validar delegacao e persistir mestre com proveniencia")
     args = parser.parse_args(argv)
     try:
         acoes = (args.planejar_atualizacao, args.atualizar_base, args.planejar_curadoria,
-                 args.exportar_prioritaria, args.importar_prioritaria)
+                 args.exportar_prioritaria, args.importar_prioritaria, args.importar_delegada, args.aplicar_delegada)
         if any(acoes):
             if args.envios_teste is not None:
                 raise ErroRevisao("acao_incompativel_com_envios_explicitos")
@@ -1157,8 +1280,9 @@ def main(argv=None):
                 if args.usar_exportacao_nova:
                     raise ErroRevisao("acao_incompativel_com_fonte_nova")
                 resultado = atualizar_base_local(aplicar=args.atualizar_base)
-            elif args.importar_prioritaria:
-                resultado = conferir_prioritaria_local(args.usar_exportacao_nova)
+            elif args.importar_prioritaria or args.importar_delegada or args.aplicar_delegada:
+                resultado = conferir_prioritaria_local(args.usar_exportacao_nova,
+                    delegada=args.importar_delegada or args.aplicar_delegada, aplicar=args.aplicar_delegada)
             else:
                 resultado = planejar_curadoria_local(exportar=args.exportar_prioritaria,
                                                       usar_exportacao_nova=args.usar_exportacao_nova)

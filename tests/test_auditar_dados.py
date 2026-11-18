@@ -617,6 +617,16 @@ class AtualizacaoDeVersoes(unittest.TestCase):
         self.assertTrue(all(x["decisao_humana"] == "pendente" for x in ls))
         self.assertEqual(r["decisoes_preservadas"], {"pendente": 2})
 
+    def test_migracao_preserva_origem_delegada_da_decisao(self):
+        self.linhas[0].update(decisao_humana="corrigir", rotulo_revisado="cadastro",
+            uso_autorizado="treino", observacoes_revisao=a.MARCADOR_DELEGADA + "fixture de software")
+        bruto, _ = a.migrar_revisao(self.anterior, self.nova, self.sintetico, self.revisao())
+        snapshots = {"H": self.nova, "S": self.sintetico}
+        cs = a.celulas_dos_snapshots(snapshots)
+        esperadas, _ = a.preparar_revisao(cs, snapshots, a.sinalizar_proximos(cs))
+        ds = a.importar_revisao_fluxo(io.StringIO(bruto.decode("utf-8-sig"), newline=""), esperadas)
+        self.assertEqual(ds["H0003:C03"]["origem_decisao"], a.ORIGEM_DELEGADA)
+
     def test_revisao_de_outra_versao_e_recusada(self):
         self.linhas[0]["sha256_fonte"] = "versao_incorreta"
         with self.assertRaises(a.ErroRevisao):
@@ -810,6 +820,152 @@ class TriagemEPrioridade(unittest.TestCase):
         linhas[0]["rotulo_sugerido"] = "horarios"
         with self.assertRaises(a.ErroRevisao):
             a.linhas_prioritarias_do_plano(plano, self.mestre, {}, "SHA_FICTICIO")
+
+
+class ProvenienciaDelegada(unittest.TestCase):
+    """Autorização e registros fictícios; não são decisões sobre os dados do projeto."""
+
+    def setUp(self):
+        fixture = TriagemEPrioridade()
+        fixture.setUp()
+        self.cs, self.mestre = fixture.cs, fixture.mestre
+        self.linhas, _ = fixture.selecionadas()
+        self.anteriores = [dict(r) for r in self.linhas]
+        for r in self.linhas:
+            r["decisao_humana"] = "aprovar"
+        self.auditoria = {"versao": 1, "origem_decisao": a.ORIGEM_DELEGADA, "fontes": {},
+            "ferramenta": "ferramenta ficticia", "modelo": "modelo ficticio",
+            "autorizacao": {"referencia": "missao_07a", "revisao_manual_individual": False,
+                             "responsavel_revisou_todas_as_frases": False}, "registros": {}}
+        for r in self.linhas:
+            self.auditoria["registros"][r["id_resposta"]] = {
+                "texto_original": r["texto_original"], "sha256_texto": a.digest(r["texto_original"].encode()),
+                "origem_frase": r["origem"], "rotulo_anterior": r["rotulo_sugerido"],
+                "rotulo_proposto": r["rotulo_sugerido"], "rotulo_final": r["rotulo_sugerido"],
+                "decisao": "aprovar", "uso_proposto": r["uso_proposto"],
+                "origem_decisao": a.ORIGEM_DELEGADA, "revisao_manual_individual": False,
+                "ferramenta": "ferramenta ficticia", "modelo": "modelo ficticio",
+                "justificativa": "JUSTIFICATIVA_PRIVADA_FICTICIA", "substitui": None}
+
+    def validar(self):
+        return a.validar_auditoria_delegada(self.auditoria, self.linhas, self.mestre, {}, self.anteriores)
+
+    def importar(self, registros):
+        f = io.StringIO(newline="")
+        w = csv.DictWriter(f, fieldnames=a.CAMPOS_PRIORIDADE)
+        w.writeheader()
+        w.writerows(self.linhas)
+        f.seek(0)
+        return a.importar_prioritaria(f, self.anteriores, self.mestre, registros)
+
+    def test_delegacao_e_importada_sem_atribuir_revisao_manual(self):
+        novas = self.importar(self.validar())
+        ds = importar_fixture(novas, self.mestre)
+        rs = a.aplicar_revisoes([a.analisar(c) for c in self.cs], ds)
+        aprovadas = [r.publico() for r in rs if r.candidata]
+        self.assertTrue(aprovadas)
+        self.assertTrue(all(r["origem_decisao"] == a.ORIGEM_DELEGADA for r in aprovadas))
+        self.assertTrue(all(r["revisao_manual_individual"] is False for r in aprovadas))
+        self.assertTrue(all(r["revisao_humana"] == "curadoria_ia_delegada" for r in aprovadas))
+        self.assertNotIn("JUSTIFICATIVA_PRIVADA_FICTICIA", json.dumps(aprovadas))
+
+    def test_observacoes_preservam_ferramenta_modelo_e_autorizacao(self):
+        novas = self.importar(self.validar())
+        r = next(r for r in novas if r["decisao_humana"] != "pendente")
+        self.assertTrue(r["observacoes_revisao"].startswith(a.MARCADOR_DELEGADA))
+        self.assertIn("modelo ficticio", r["observacoes_revisao"])
+        self.assertIn("ferramenta ficticia", r["observacoes_revisao"])
+        self.assertIn("revisao_manual_individual=false", r["observacoes_revisao"])
+
+    def test_nao_pode_declarar_revisao_humana_individual(self):
+        for campo in ("revisao_manual_individual", "responsavel_revisou_todas_as_frases"):
+            self.auditoria["autorizacao"][campo] = True
+            with self.assertRaises(a.ErroRevisao):
+                self.validar()
+            self.auditoria["autorizacao"][campo] = False
+
+    def test_exige_autorizacao_e_versao_corretas(self):
+        for campo, valor in [("versao", 9), ("origem_decisao", "humano"), ("modelo", "")]:
+            anterior = self.auditoria[campo]
+            self.auditoria[campo] = valor
+            with self.assertRaises(a.ErroRevisao):
+                self.validar()
+            self.auditoria[campo] = anterior
+        self.auditoria["autorizacao"]["referencia"] = "sem_autorizacao"
+        with self.assertRaises(a.ErroRevisao):
+            self.validar()
+
+    def test_texto_hash_origem_e_rotulo_anterior_sao_imutaveis(self):
+        r = self.auditoria["registros"][self.linhas[0]["id_resposta"]]
+        for campo, valor in [("texto_original", "ALTERADO"), ("sha256_texto", "outro"),
+                             ("origem_frase", "coletado"), ("rotulo_anterior", "fora_dominio")]:
+            antes = r[campo]
+            r[campo] = valor
+            with self.assertRaises(a.ErroRevisao):
+                self.validar()
+            r[campo] = antes
+
+    def test_decisao_na_planilha_deve_corresponder_ao_ledger(self):
+        self.linhas[0]["decisao_humana"] = "rejeitar"
+        with self.assertRaises(a.ErroRevisao):
+            self.importar(self.validar())
+
+    def test_correcao_nao_pode_divergir_do_rotulo_final_delegado(self):
+        self.linhas[0].update(decisao_humana="corrigir", rotulo_corrigido="cadastro")
+        self.auditoria["registros"][self.linhas[0]["id_resposta"]]["decisao"] = "corrigir"
+        with self.assertRaises(a.ErroRevisao):
+            self.importar(self.validar())
+
+    def test_registro_faltante_ou_falsa_autoria_e_recusado(self):
+        identificador = self.linhas[0]["id_resposta"]
+        r = self.auditoria["registros"].pop(identificador)
+        with self.assertRaises(a.ErroRevisao):
+            self.validar()
+        self.auditoria["registros"][identificador] = r
+        r["ferramenta"] = "humano"
+        with self.assertRaises(a.ErroRevisao):
+            self.validar()
+
+    def test_justificativa_pessoal_ou_vazia_e_recusada(self):
+        r = self.auditoria["registros"][self.linhas[0]["id_resposta"]]
+        for texto in ("", "pessoa@example.invalid"):
+            r["justificativa"] = texto
+            with self.assertRaises(a.ErroRevisao):
+                self.validar()
+
+    def test_versao_de_fonte_diferente_bloqueia_delegacao(self):
+        self.auditoria["fontes"] = {"H": {"sha256_entrada": "outra_versao"}}
+        with self.assertRaises(a.ErroRevisao):
+            self.validar()
+
+    def test_pendente_delegada_tem_rastro_mas_nao_aprovacao(self):
+        r = self.linhas[0]
+        r["decisao_humana"] = "pendente"
+        reg = self.auditoria["registros"][r["id_resposta"]]
+        reg.update(decisao="pendente", rotulo_final=None)
+        novas = self.importar(self.validar())
+        ds = importar_fixture(novas, self.mestre)
+        self.assertEqual(ds[r["id_resposta"]]["decisao"], "pendente")
+        self.assertEqual(ds[r["id_resposta"]]["origem_decisao"], a.ORIGEM_DELEGADA)
+        self.assertFalse(next(x for x in a.aplicar_revisoes([a.analisar(c) for c in self.cs], ds)
+                              if x.celula.id == r["id_resposta"]).candidata)
+
+    def test_nao_sobrescreve_decisao_anterior_sem_proveniencia(self):
+        r = next(m for m in self.mestre if m["id_resposta"] == self.linhas[0]["id_resposta"])
+        r.update(decisao_humana="corrigir", rotulo_revisado="cardapio", uso_autorizado="teste")
+        with self.assertRaises(a.ErroRevisao):
+            self.importar(self.validar())
+
+    def test_textos_originais_e_origens_nao_mudam_na_importacao(self):
+        novas = self.importar(self.validar())
+        self.assertEqual([(r["id_resposta"], r["texto_original"], r["origem"]) for r in novas],
+                         [(r["id_resposta"], r["texto_original"], r["origem"]) for r in self.mestre])
+
+    def test_reimportacao_delegada_e_idempotente(self):
+        primeira = self.importar(self.validar())
+        self.mestre = primeira
+        segunda = self.importar(self.validar())
+        self.assertEqual(primeira, segunda)
 
 
 if __name__ == "__main__":
