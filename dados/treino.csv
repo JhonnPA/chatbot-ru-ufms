@@ -1,1 +1,552 @@
 texto,intencao,origem
+QUAL O RANGO DA VEZ?,cardapio,humano
+DA PRA SABER A COMIDA DO RESTO DA SEMANA IOU MES?,cardapio,humano
+Oi chat o ru da ufms tem opção vegetariana ou nai,cardapio,humano
+"
+sim o cardapio de hj",cardapio,humano
+Tem doce hoje?,cardapio,humano
+Qual é o prato chef de hoje?,cardapio,humano
+O cardápio tem variação em ingles?,cardapio,humano
+"Salve Ru, qual é o rango do dia ",cardapio,humano
+"Ru, fala para mim qual é o cardio da facur essa semana ",cardapio,humano
+Que tipo de comida tem lá?,cardapio,humano
+Tem frango em algum dia da semana lá?,cardapio,humano
+será que tu pode me informar se tem alguma comida com molho ou massas?,cardapio,humano
+tem oq pra comer nessa disgraça?,cardapio,humano
+Oq tem para comer hoje? ,cardapio,humano
+Gostaria de saber o cardápio ,cardapio,humano
+qual trem tem de comer hj ,cardapio,humano
+Qual o cardápio do dia no RU?,cardapio,humano
+"oi, oq tem no RU hj?",cardapio,humano
+Oq vai ter de comida hoje? ,cardapio,humano
+perguntaria quais as proteínas ,cardapio,humano
+oq vai ter hj de ao mosso?,cardapio,humano
+quero ver o cardápio pfv,cardapio,humano
+Qq tem pra comer ?,cardapio,humano
+Tem opção vegetariana?,cardapio,humano
+chat oq terá de comida na quinta?,cardapio,humano
+"Boa tarde excelentíssima IA, poderia me informar qual será o cardápio da próxima semana? Obrigado.",cardapio,humano
+Qual a mistura hj ?,cardapio,humano
+Tem bife a parmegiana ?,cardapio,humano
+"Sim,  ""Olá, o que tem para comer no restaurante universitário ?""",cardapio,humano
+Quais são os pratos de hoje?,cardapio,humano
+Tem Strogonoff de frango?,cardapio,humano
+Gostaria de olhar o cardápio de vocês,cardapio,humano
+Vcs tem opção vegana ?,cardapio,humano
+qual o menu do ru pra essa semana? tem peixe,cardapio,humano
+O cardápio de amanhã já saiu? Queria ver se compensa almoçar lá ou levo marmita,cardapio,humano
+será q hj tem opção vegana ?,cardapio,humano
+"cardapio da semana pfv, tem algo sem carne? / oq tem no cardapio hj? tem opcao vegetariana?",cardapio,humano
+O cardápio ,cardapio,humano
+Oq temos hj ? Espero q seja algo gostoso ,cardapio,humano
+salve o ru tem opcao sem gluten hj,cardapio,llm
+bom dia mostra o menu do ru de segunda ai,cardapio,llm
+opa q tem pra comer no ru kkk,cardapio,llm
+qual o cardapio amanha???,cardapio,llm
+boa tarde o ru vai ter cardapio especial no natal,cardapio,llm
+qual a opcao veggie de segunda hj,cardapio,llm
+"QUE HORAS QUE ABRE O RU AI, E ATE QUE HORAS QUE VAI SO PRA SABER",horarios,humano
+O ru é só dia de semana ou fim de semana tbm abre? E tem janta?,horarios,humano
+o RU abr no sabado?,horarios,humano
+Que hrs abre o RU?,horarios,humano
+"Ru, quais dias e horários funciona o refeitório ",horarios,humano
+Qual horário do almoço ?,horarios,humano
+Qual o horário de funcionamento do RU? ,horarios,humano
+q hrs sai essa comida ai,horarios,humano
+Em quais horários vai ser servido as refeições do RU?,horarios,humano
+em qual horario é servido a comida?,horarios,humano
+quais os horarios de almoco e janta?,horarios,humano
+Que horas que abre e que horas fecha o RU,horarios,humano
+que horas é o ao mosso e a janta no ru?,horarios,humano
+ate q hrs fica aberto e da p comer?,horarios,humano
+O R.U fica aberto de que horas a que horas ?,horarios,humano
+quais sãos os horários de refeição no ru? ,horarios,humano
+Qual o horário de funcionamento do RU? Há atendimento nos finais de semana?,horarios,humano
+o almoço hj vai até q hrs ?? Eu só chego 15h17 ,horarios,humano
+"Bom dia, gostaria de saber qual o horário de almoço de vocês ?",horarios,humano
+Quais são os horários do RU e quando as refeições estão disponíveis?,horarios,humano
+Poderia me dizer que horas o almoço e a janta estão disponíveis?,horarios,humano
+Consigo jantar e almoçar até q hrs ? Vou chegar tarde na uf,horarios,humano
+o ru abre q horas? vcs sabem se tem diferenca no horario em epoca de prova?,horarios,humano
+hj tem ru? to c fome kkkk / ru ta aberto hj? quero almocar ai,horarios,humano
+ru abre q horas e fecha q horas? sabado tem? /q hrs o ru abre? funciona sabado? ate q hrs tem janta?,horarios,humano
+Vai abrir q hrs hoje? Aqui funfa sabado? Ate q hrs da p comer aq?,horarios,humano
+Funciona em que horários?,horarios,humano
+"deixa eu peguntar, qual o horario de funcionamento? e quais dias também",horarios,humano
+fica aberto deque hrs ate q hrs?,horarios,humano
+Qual o horário de funcionamento?,horarios,humano
+quando abre esse trem? ,horarios,humano
+quando funciona essa giromba,horarios,humano
+Que horas que abre?,horarios,humano
+eai horario do ru,horarios,llm
+a janta vai ate que horas hj,horarios,llm
+q hrs termina o almoco pls,horarios,llm
+q horas fecha o ru???,horarios,llm
+Fala hr do almoco do ru rs,horarios,llm
+fala o ru abre segunda??,horarios,llm
+opa o ru abre que hrs pro almoco,horarios,llm
+e ai que hrs comeca a janta no ru,horarios,llm
+"QUANTO QUE É COMIDA, BOLSISTA PAGA? OU TENHO QUE VIVER REBOCO DE PAREDE",valores,humano
+Quanto custa se um alguma visita quiser comer lá ,valores,humano
+Todo mundo paga msm valor ou aluno de cota tem desconto ,valores,humano
+"Ru, sou pobre e bolsista, eu tenho que pagar para comer no refeitório da facur ?",valores,humano
+Qnt e isso? Tenho direito a isencao?,valores,humano
+"meu querido, tem como informar os valores pra mim? ",valores,humano
+Quanto custa comer aí?,valores,humano
+Quanto custa a comida?,valores,humano
+Tem promoções de destaque do Ru,valores,humano
+Qual o valor da refeição no RU? ,valores,humano
+Qual o valor p comer no RU sem ter bolsa?,valores,humano
+no ru eu tenho q pagar ou posso comer de graça??,valores,humano
+Qual o valor da refeição para estudantes de graduação? Existe isenção para quem recebe auxílio?,valores,humano
+quanto custa e bolsista paga ?,valores,humano
+Quanto custa almoçar ou jantar no aqui no restaurante ? ,valores,humano
+Quanto custa X alimento? Existe alguma forma de comer gratuitamente?,valores,humano
+Como funciona a alimentação no RU? É gratuito ou é necessário pagar pelas refeições?,valores,humano
+Quanto tá saindo o preço do prato ?,valores,humano
+alguém sabe se tem desconto pra quem é aluno de graduação? ou é preço único pra todo mundo,valores,humano
+"quanto é o almoço pra quem não é da UFMS, tipo visitante?",valores,humano
+20 reais dá pra comer no RU ?,valores,humano
+quanto custa o ru e como faco pra ter isencao? /qnt q ta a refeicao? quem tem isencao? bolsista paga?,valores,humano
+Quanto eu pagaria lá?,valores,humano
+eh de graca ou custa o olho do rabo?,valores,humano
+Como funcionam os valores?,valores,humano
+preciso pagar???,valores,humano
+tem q pagar?,valores,humano
+"oi, como funciona aqui? quanto é?",valores,humano
+qual o preço disso ou eu posso comer de graça?,valores,humano
+precisa pagar alguma coisa?,valores,humano
+Quanto custa pra comer ?,valores,humano
+Eh gratis comer?,valores,humano
+tem como comer de graca no ru por favor,valores,llm
+ei quanto ta a refeicao no ru por favor,valores,llm
+Quanto custa a janta?,valores,llm
+boa tarde o ru e gratuito por favor,valores,llm
+Quem tem bolsa paga o ru kkk,valores,llm
+preco do ru ta quanto agr??,valores,llm
+qnt ta o ru ai,valores,llm
+Quanto custa pra aluno,valores,llm
+valor do ru??,valores,llm
+aluno de medicina paga quanto no ru,valores,llm
+"Ru, como funciona o seu sistema de credito do cartão ",recarga_creditos,humano
+como que coloca créditos no cartão do ru ,recarga_creditos,humano
+como coloco créditos no meu cartão do ru? ,recarga_creditos,humano
+Gostaria de saber se é possível recarregar o cartão do RU com cartão de crédito parcelado.,recarga_creditos,humano
+"Preciso adicionar créditos no meu cartão do RU, poderia me explicar o passo a passo, por favor?",recarga_creditos,humano
+TEM COMO PAGAR O RU NO DEBITO?,recarga_creditos,humano
+"Olá, existe uma possibilidade de colocar créditos no cartão do RU ?",recarga_creditos,humano
+O que preciso fazer para colocar créditos no meu cartão RU?,recarga_creditos,humano
+"Fala meu nobre !! Sabe me dizer onde, como ou com quem eu falo pra me ajudar a colocar crédito no meu cartão do RU ? To na broca ",recarga_creditos,humano
+"Aoba se eu pagar o ru no pix e o banco der erro na transferência mas debitar da minha conta, como resolvo?",recarga_creditos,humano
+"TEM COMO RECARREGAR O CARTAO PELO APP, EU PAGUEI E NAO TA CAINDO O SALDO NAO",recarga_creditos,humano
+quero saber se da pra recarregar pelo app e em quanto tempo médio costuma cair.,recarga_creditos,humano
+Eu comprei crédito pelo app e ainda não caiu é por lá que compra mesmo?,recarga_creditos,humano
+Da pra fzr recarga digital?,recarga_creditos,humano
+Da p recarregar pelo app?,recarga_creditos,humano
+Demora muito pra cair quando recarrega pelo app?,recarga_creditos,humano
+sabe me falar se da pra recarregar o credito pelo app? ou nem?,recarga_creditos,humano
+como que recarrega esse cartao aki?,recarga_creditos,humano
+Como coloca crédito? ,recarga_creditos,humano
+como bota crédito nesse trem ,recarga_creditos,humano
+como faz p botar credito,recarga_creditos,humano
+"Queria saber se tem como colocar créditos no cartão, se sim, como faz? ",recarga_creditos,humano
+como faço para colocar dinheiro no meu cartao?,recarga_creditos,humano
+como que eu coloco creditos no cartao?,recarga_creditos,humano
+Como coloco credito no cartao?,recarga_creditos,humano
+como faz p colocar crédito no cartão?,recarga_creditos,humano
+como q coloco o tal do crédito no tão do card ,recarga_creditos,humano
+Como faço para adicionar créditos ao cartão e quais são as formas de pagamento disponíveis?,recarga_creditos,humano
+"Paguei a recarga mas o saldo não atualizou até agora, faz umas 3 horas. Isso é normal? Quem eu procuro?",recarga_creditos,humano
+sou novo e n sei como recarrego meu cartão ,recarga_creditos,humano
+"recarreguei e nao entrou o credito, oq eu faco / da pra colocar credito no cartao pelo app? paguei mas o saldo n caiu ainda",recarga_creditos,humano
+ei onde compro credito pro ru hj,recarga_creditos,llm
+onde faz recarga do ru pfv,recarga_creditos,llm
+recarga do ru online vlw,recarga_creditos,llm
+Opa meu cartao do ru ta sem saldo como recarrego rs,recarga_creditos,llm
+fala recarga do cartao do ru como faz,recarga_creditos,llm
+tem app p recarregar o ru,recarga_creditos,llm
+oi o ru aceita pix,recarga_creditos,llm
+como ver meu saldo do ru,recarga_creditos,llm
+COMO COLOCO CREDITO NO CARTAO DO RU AI,recarga_creditos,llm
+boa tarde como recarrega o cartao do ru vlw,recarga_creditos,llm
+"Eu perdi minha carteirinha do ru oq eu faço, tem como fazer outra ou não precisa pra entrar ",cadastro,humano
+"Ru, meu querido, como funciona o seu cadastro, me de detalhes.",cadastro,humano
+como q se cadrasta no RU?,cadastro,humano
+Como eu me cadastro no RU? ,cadastro,humano
+"é a minha primeira vez aqui, como faço para me cadastrar?",cadastro,humano
+OI como se cadastro no RU nunca usei,cadastro,humano
+"eu nunca usei, como faz p cadastrar?",cadastro,humano
+"chat nunca fui a um ru, poderia me explicar como que funciona e o que preciso fazer para entrar pela primeira vez?",cadastro,humano
+"é a minha primeira vez no ru, voce poderia me explicar passo a passo como se cadastrar? ",cadastro,humano
+Sou aluno novo e gostaria de saber como realizar o cadastro para utilizar o restaurante universitário.,cadastro,humano
+Oq eu preciso levar para me cadastrar no tal do RU ?,cadastro,humano
+Como posso fazer o cadastro do meu cartão? Que informações preciso colocar?,cadastro,humano
+"Fui aprovado agora no vestibular, o que preciso fazer pra liberar meu acesso ao RU?",cadastro,humano
+Cheguei esse ano na faculdade... como me cadastro no ru ?,cadastro,humano
+"QUERO FAZER CADASTRO, ROUBARAM MEU CARTAO PRECISO DE OUTRO COMO FAZ",cadastro,humano
+"perdi a carteirinha do ru, como faz pra pedir outra? /como faz cadastro no ru? precisa da carteirinha pra entrar? perdi meu cartao e agr?",cadastro,humano
+Como me cadastro nisso? P entrar tem q ter carteirinha?,cadastro,humano
+É difícil fazer essa carteirinha?,cadastro,humano
+Link de cadastro ,cadastro,humano
+como cadastra,cadastro,humano
+me ajuda a me cadastrar,cadastro,humano
+Como se cadastra ?,cadastro,humano
+Como faço para me cadastrar ?,cadastro,humano
+Entrei esse ano na faculdade… como me cadastro ? ,cadastro,humano
+Preciso de algum documento pra me cadastrar? Tipo comprovante de matrícula,cadastro,humano
+da p usar o ru so com a carteirinha,cadastro,llm
+Fala psoso usar o ru sem cadastro ai,cadastro,llm
+Como faco p me cadastrar no ru ai,cadastro,llm
+ei cadastro do ru e online,cadastro,llm
+Nunca fui no ru como funciona???,cadastro,llm
+oi preciso de cadastro p comer no ru pls,cadastro,llm
+Sou calouro como uso o ru??,cadastro,llm
+bom dia como uso o ru pela primeira vez pfv,cadastro,llm
+precisa de foto pro cadastro do ru,cadastro,llm
+Como faz o cadastro do ru ai,cadastro,llm
+"bom dia como me cadastro no ru, sou de engenharia pls",cadastro,llm
+quai documentos pro cadastro do ru pls,cadastro,llm
+POSSO LEVAR UM MARMITAO OU SO COM A MOCHILA MESMO,regras_uso,humano
+Pode levar bebida lá dentro ,regras_uso,humano
+Qual q e as regras daq? Posso trazer marmita mochila ou bolsa?,regras_uso,humano
+tem como eu levar algum amigo p me acompanhar? de fora da faculdade,regras_uso,humano
+oq nao pode fazer aqui dentro do RU?,regras_uso,humano
+Existem regras ou cartazes de aviso sobre o RU e o que pode ser feito lá dentro?,regras_uso,humano
+Minino eu posso fazer o que dentro desse restaurante aqui de muitas comidas,regras_uso,humano
+"Posso entrar de chinelo, shot e regata ou tem dress code ?",regras_uso,humano
+pode comer no chao la fora? e pode sair com a bandeja? kkkk,regras_uso,humano
+Posso entrar com garrafa de água e comer minha própria fruta lá dentro? Pergunto porque tenho restrição alimentar,regras_uso,humano
+Existe política de uso do ru ? Tem problema eu comer a sobremesa primeiro ?,regras_uso,humano
+pode levar marmita ou n?/posso levar marmita? visitante pode almocar la? pode entrar de mochila?,regras_uso,humano
+principalmente sobre visitantes e uso de mochilas.,regras_uso,humano
+Visita pode comer?,regras_uso,humano
+Poderia comprar em outro estabelecimento e levar a refeição ate o local? Estou em grupo mas 2 de 6 pessoas não irao comer no local,regras_uso,humano
+Tem alguma regra pra entrar lá?,regras_uso,humano
+"eu sou visitante, será que tem problema eu almoçar?",regras_uso,humano
+pode fazer oq quiser aki ou tem regras?,regras_uso,humano
+Quais as regras do restaurante?,regras_uso,humano
+Regras do local,regras_uso,humano
+o que não posso fazer lá dentro,regras_uso,humano
+qq pode qq nao pode,regras_uso,humano
+o que eu posso ou nao fazer aqui dentro?,regras_uso,humano
+Pode levar marmita,regras_uso,humano
+quais são as regras de uso?,regras_uso,humano
+Eu posso repetir as guarnições ?,regras_uso,humano
+Posso comer no ru sem bandeja???,regras_uso,llm
+pode levar fruta p viagem??,regras_uso,llm
+bom dia pode entrar no ru de chinelo,regras_uso,llm
+Posso levar comida pra fora do ru vlw,regras_uso,llm
+e ai da p levar visita no ru vlw,regras_uso,llm
+BOA TARDE PODE ENTRAR COM ANIMAL NO RU RS,regras_uso,llm
+boa tarde e proibido usar celular no ru,regras_uso,llm
+pode repetir a comida kkk,regras_uso,llm
+PODE PEGAR DOIS SUCOS??,regras_uso,llm
+Salve posso levar marmitap ra casa??,regras_uso,llm
+"QUE HORAS QUE ABRE A BIBLIOETECA NA QUARTA FEIRA, PRECISO DE UNS 3 LIVRO",fora_dominio,humano
+"COMO RECCAREGAR O PASSE DE ONIBUS, EU FALO COM QUEM ONDE EU FAÇO",fora_dominio,humano
+"Qual é o horário de funcionamento da biblioteca e o custo sobre outros serviços, como a cantina.",fora_dominio,humano
+Quanto é a bolsa pra quem é baixa renda e qual o cardapio da cantina ,fora_dominio,humano
+Onde eu recarrego o cartão do busão ,fora_dominio,humano
+posso pegar livros da biblioteca emprestados?,fora_dominio,humano
+"Oi, eu estou pensando em fazer o cadastro na faculdade e gostaria o que eu vou precisar para fazer e como ela funciona ",fora_dominio,humano
+Qual o horario q a biblioteca abre?,fora_dominio,humano
+Até que horas a cantina fica aberta?,fora_dominio,humano
+Onde carrega o passe de ônibus aqui?,fora_dominio,humano
+"meu mano, tava querendo ir na biblioteca, mas nem sei o horario de funcionamento. tem como me falar?",fora_dominio,humano
+"to precisando de ajuda pra recarregar meu passe, tu pode ajudar? por favor",fora_dominio,humano
+que hrs que funciona a biblioteca da UFMS? e fecha que hrs?,fora_dominio,humano
+como q recarega o paçe do onibus msm?,fora_dominio,humano
+Onde carrega passe?,fora_dominio,humano
+Como é o funcionamento da biblioteca?,fora_dominio,humano
+Onde recarrego o passe?,fora_dominio,humano
+Quais são os horários de funcionamento da biblioteca? ,fora_dominio,humano
+Como eu recarrego o passe estudantil?,fora_dominio,humano
+como faz pra colocar passagem no cartão,fora_dominio,humano
+q hrs abre os livro la,fora_dominio,humano
+como carrega o passe do busao,fora_dominio,humano
+Qual horário de funcionamento da biblioteca da UFMS?,fora_dominio,humano
+qual sao os horarios da biblioteca?,fora_dominio,humano
+como faço para recarregar o passe do onibus?,fora_dominio,humano
+qual o horario da biblioteca?,fora_dominio,humano
+me ajuda a recarregar meu passe do onibus estudantil? como q eu faço?,fora_dominio,humano
+Como funciona a biblioteca? que horas q ela abre e fecha,fora_dominio,humano
+ONDE RECARREGO O PASSE DO ONIBUS NAO ACHEI N SEI COMO FAZ,fora_dominio,humano
+até que horas fica a biblioteca e quando abre?,fora_dominio,humano
+como q eu pago o passe de ônibus?,fora_dominio,humano
+A biblioteca aberta que horas ?,fora_dominio,humano
+Como recarregar o passe ?,fora_dominio,humano
+quais são os horários da biblioteca da ufms?,fora_dominio,humano
+"Qual o horário de funcionamento da biblioteca durante a semana? E a secretaria acadêmica, atende no mesmo horário?",fora_dominio,humano
+Como faço para recarregar o passe de ônibus estudantil? É necessário comparecer a algum local?,fora_dominio,humano
+Q hrs a biblioteca fecha ? Será q consigo usar a copiadora ?,fora_dominio,humano
+sabe me dizer com quem eu falo ou onde vou para recarregar o passe de onibus ?,fora_dominio,humano
+Como faço ou aonde recarrego o passe do ônibus ?,fora_dominio,humano
+Quais os horários de disponibilidade da biblioteca?,fora_dominio,humano
+Onde e como posso recarregar meu passe do ônibus?,fora_dominio,humano
+Queria saber como faço pra recarregar meu passe estudantil. Tem algum aplicativo ou site pra colocar créditos?,fora_dominio,humano
+Que hrs funciona a tal da biblioteca e quando fecha ? Só aluno da UFMS pode entrar nela ?,fora_dominio,humano
+"Fala meu mano IA, bao ? Onde q recarrego o passe pra andar de ônibus ? E o businho, é 0800?",fora_dominio,humano
+Que horas a biblioteca abre amanhã? Preciso devolver um livro e tô com medo de pagar multa,fora_dominio,humano
+Como funciona a recarga do passe de ônibus? É pelo site ou presencialmente?,fora_dominio,humano
+Qual o horário da biblioteca? E tem sala de estudo em grupo pra reservar?,fora_dominio,humano
+Como recarrego o passe de ônibus estudantil? Tem que ir presencial ou resolve pelo app?,fora_dominio,humano
+onde fica a biblioteca e q hrs ela abre ?,fora_dominio,humano
+Por onde os totens de recarga do passe ficam disponíveis ? Como recarrego ?,fora_dominio,humano
+biblioteca abre q hrs hj? e na cantina tem lanche barato?/a biblioteca abre q hrs hj? e na cantina tem lanche barato?,fora_dominio,humano
+como faz o cadastro no sistema academico? e como recarrega o passe do onibus de estudante?,fora_dominio,humano
+e ai meu passe acabou como recarrego,fora_dominio,llm
+bom dia hr da biblioteca?,fora_dominio,llm
+Q hrs fecha a biblio vlw,fora_dominio,llm
+recarga do passe como faz hj,fora_dominio,llm
+passe estudantil recarga online ai,fora_dominio,llm
+como coloco credito no passe estudantil??,fora_dominio,llm
+A biblioteca abre nas ferias vlw,fora_dominio,llm
+eai como tirar o passe de estudante?,fora_dominio,llm
+e ai horario da bibliooteca da ufms kkk,fora_dominio,llm
+Boa notie posso recarregar o passe por pix pfv,fora_dominio,llm
+da pra recarregar o passe pelo app por favor,fora_dominio,llm
+bom dia biblioteca funciona terca kkk,fora_dominio,llm
+Ate que horas a biblioteca fica aberta pls,fora_dominio,llm
+hr da biblioteca hj,fora_dominio,llm
+como renovar o passe estudantil pfv,fora_dominio,llm
+Fala biblioteca abre q horas quinta,fora_dominio,llm
+qual horario da biblio fds pls,fora_dominio,llm
+oi posso estudar na biblioteca a noite por favor,fora_dominio,llm
+horario da biblioteca central pfv,fora_dominio,llm
+Ei biblioteca funicona quinta,fora_dominio,llm
+quanto custa a recarga do passe hj,fora_dominio,llm
+a biblioteca ta aberta agora ai,fora_dominio,llm
+a biblioteca abre fds pfv,fora_dominio,llm
+e ai a biblioteca abre domingo pls,fora_dominio,llm
+precisa de comprovante de matricula pro passe ai,fora_dominio,llm
+BOA NOITE BIBLIOTECA FUNCIONA HJ???,fora_dominio,llm
+boa noite a biblio fecha pro almoco rs,fora_dominio,llm
+ei como recarregar o passe de onibus,fora_dominio,llm
+biblioteca abre que horas hj pfv,fora_dominio,llm
+opa biblioteca funciona essa semana pfv,fora_dominio,llm
+Fala a biblioteca abre sabado??,fora_dominio,llm
+como recarrego o passe estudantil pfv,fora_dominio,llm
+fala biblioteca funciona segunda hj,fora_dominio,llm
+VALEU MANO TAMOJUNTO 👍,chitchat,humano
+Obg chat 🚬,chitchat,humano
+"Oiee, obg chat! ",chitchat,humano
+Tmj chat,chitchat,humano
+"opa, boa noite. tudo bem? ",chitchat,humano
+tmj chefe,chitchat,humano
+oi chat ,chitchat,humano
+so bom dia e obg mesmo,chitchat,humano
+VALEU FI,chitchat,humano
+"Agradeço a atenção chefia, bom dia!",chitchat,humano
+agradecido pelo suporte mestrão,chitchat,humano
+"Obrigado meu amigo robozinho, tamo junto!",chitchat,humano
+Muito obrigado pela ajuda meu excelentíssimo e querido amigo 🤝,chitchat,humano
+Agradecido pelo se suporte meu nobre !!,chitchat,humano
+"Obrigada, bom trabalho!",chitchat,humano
+Tmj meu campeão brigadaooo,chitchat,humano
+"Salve pilantra safado, vlw meu nobre ",chitchat,humano
+"opa, bom dia / muito obrigado, meu mano",chitchat,humano
+Obrigada gata (minha chat se chama Britney),chitchat,humano
+"""Opa chat, tudo bem?"" // ""Muito obrigado!""",chitchat,humano
+"oie, bom dia! / valeu demais, ajudou mt 🙏/valeu chat, vc é o cara / bom dia meu rei",chitchat,humano
+Brigado,chitchat,llm
+Opa,chitchat,llm
+show valeu,chitchat,llm
+Oi tudo bem,chitchat,llm
+valeu ajudou muito,chitchat,llm
+e ai,chitchat,llm
+tchau obrigado,chitchat,llm
+obg,chitchat,llm
+ola,chitchat,llm
+agradeco,chitchat,llm
+brigadao,chitchat,llm
+top obrigado,chitchat,llm
+oi,chitchat,llm
+Bom dia,chitchat,llm
+valeu,chitchat,llm
+Muito obrigada,chitchat,llm
+tmj,chitchat,llm
+obrigado,chitchat,llm
+valeu bot,chitchat,llm
+oi bot,chitchat,llm
+oi opsso guardar lugar pro amigo ai,regras_uso,llm
+falou,chitchat,llm
+tem cachaça?,cardapio,humano
+como fazer o cadastro?,cadastro,humano
+"Vai a merda, robô desgraçado consumidor de água da porra",chitchat,humano
+obg escravo,chitchat,humano
+"Não agradeço, pois, é desperdício de tokens.",chitchat,humano
+"Nao, eu nao costumo fazer isso KKKKKKKKKKKK, boa Noite!",chitchat,humano
+com quem posso tirar duvidas que nao seja sobre o ru??,fora_dominio,humano
+Perguntaria a um funcionário dentro do restaurante sobre os horários,horarios,humano
+Cartão do RU funciona pra lanchonete também ou é só pro restaurante?,recarga_creditos,humano
+tem sobremesa essa semanan o ru,cardapio,llm
+O ru vai ter frango agr?,cardapio,llm
+oi tem suco no ru hj?,cardapio,llm
+teem feijoada terca kkk,cardapio,llm
+qual horario do ru fds pls,horarios,llm
+o ru vai fechar nas ferias???,horarios,llm
+BOA NOITE O RU ABRE QUARTA,horarios,llm
+boa tarde qual horario do ru no feriado vlw,horarios,llm
+O ru abre terca?,horarios,llm
+Opa o ru abre quinta por favor,horarios,llm
+O ru vai abrir essa semana pfv,horarios,llm
+boa tarde qual horario do ru domingo por favor,horarios,llm
+quanto paga visitante no ru hj,valores,llm
+Quanto ta o almoco no ru ai,valores,llm
+Qual o preco da refeicao hj,valores,llm
+o ru e de graca pra cotista rs,valores,llm
+ola tem desconto no ru hj,valores,llm
+como consigo isencao no ru,valores,llm
+opa servidor paga quanto no ru vlw,valores,llm
+como pedir gratuidade no ru,valores,llm
+"salve como me cadastro no ru, sou de computacao pfv",cadastro,llm
+"Como me cadastro no ru, sou de medicina",cadastro,llm
+"como me cadastro no ru, sou de letras kkk",cadastro,llm
+"Como me cadastro no ru, sou de direito vlw",cadastro,llm
+"como me cadastro no ru, sou de biologia por favor",cadastro,llm
+Ei pode entrar de bermuda no ru ai,regras_uso,llm
+opa posso entrar com mochila no ru,regras_uso,llm
+opa tem regra de roupa no ru,regras_uso,llm
+boa tarde pode levar talher de casa,regras_uso,llm
+boa noite posso levar meu proprio pote ai,regras_uso,llm
+boa noite posso ficar estudando no ru vlw,regras_uso,llm
+qual horario da biblio no feriado kkk,fora_dominio,llm
+OLA QUAL HORARIO DA BIBLIO SABADO,fora_dominio,llm
+e ai a biblioteca abre no feriado,fora_dominio,llm
+biblioteca abre que hrs amanha pls,fora_dominio,llm
+qual horario da biblio domingo rs,fora_dominio,llm
+oi biblioteca abre que horas essa semana,fora_dominio,llm
+qual o valor minimo de reecarga?,recarga_creditos,llm
+da p recarregar o ru por pix por favor,recarga_creditos,llm
+eai como coloca saldo no ru,recarga_creditos,llm
+cmo por credito no ru pfv,recarga_creditos,llm
+boa tarde posso recarregar pelo celular rs,recarga_creditos,llm
+Boa tarde da pra pagar no cartao de credito a recarga,recarga_creditos,llm
+opa onde fica o guiche de recarga?,recarga_creditos,llm
+onde pego o cartao do ru ai,cadastro,llm
+Como tirar o cartao do ru???,cadastro,llm
+Posso agendar uma recarga do meu cartão do RU pra semana que vem ou o crédito entra sempre na hora?,recarga_creditos,llm
+Meu cadastro do restaurante universitário ficou ligado a um e-mail que não uso mais; como atualizo isso?,cadastro,llm
+Aluna de pós-graduação precisa fazer uma inscrição específica para utilizar o RU?,cadastro,llm
+"Meu acesso ao restaurante aparece inativo mesmo com matrícula regular, onde peço a ativação?",cadastro,llm
+Como descubro se a solicitação de cadastro no RU realmente foi concluída?,cadastro,llm
+"Mudei de curso e meu perfil do RU continua mostrando a graduação antiga, tem como corrigir?",cadastro,llm
+Posso passar meu cartão na catraca do RU para liberar a entrada de outra pessoa?,regras_uso,llm
+Tem limite de tempo para ficar sentado no salão depois que termino de comer?,regras_uso,llm
+"Se eu derramar minha refeição sem querer, qual é o procedimento permitido no RU?",regras_uso,llm
+É liberado tirar fotos ou gravar vídeo dentro da área de refeições do restaurante universitário?,regras_uso,llm
+posso entrar no ru carregando capacete de moto ou preciso deixar do lado de fora?,regras_uso,llm
+É permitido dividir o mesmo prato com um colega dentro do refeitório?,regras_uso,llm
+"E aí, sobrevivendo à semana?",chitchat,llm
+"Boa tarde, inteligência companheira!",chitchat,llm
+"Oiê, apareceu por aqui?",chitchat,llm
+Como cê tá nessa correria?,chitchat,llm
+Tudo em paz do seu lado?,chitchat,llm
+"Cheguei, pode me dar um alô?",chitchat,llm
+"Salve, criatura digital!",chitchat,llm
+Passando só pra desejar uma manhã tranquila.,chitchat,llm
+"Feliz quarta, assistente!",chitchat,llm
+"Opa, td certinho por aí hj?",chitchat,llm
+"Vou nessa, até nossa próxima conversa.",chitchat,llm
+"Fechou, depois a gente se fala.",chitchat,llm
+"Preciso sair agora, fica bem!",chitchat,llm
+"Partiu dormir, xauzinho.",chitchat,llm
+"Até mais, meu consagrado da nuvem.",chitchat,llm
+"Encerro por aqui, tenha uma ótima noite.",chitchat,llm
+"Fui! Não some, hein kkk.",chitchat,llm
+A gente se vê por aqui qualquer dia.,chitchat,llm
+Obrigada pela paciência comigo hoje.,chitchat,llm
+"A explicação ficou cristalina, gratidão!",chitchat,llm
+"Vc salvou meu raciocínio, sério.",chitchat,llm
+"Que gentileza a sua, agradeço de coração.",chitchat,llm
+"Caraca, agora entendi! Merece aplausos.",chitchat,llm
+"Perfeito, era isso que eu queria ouvir. Valeuzão!",chitchat,llm
+Agradeço por ter conversado comigo com calma.,chitchat,llm
+"Isso me deixou mais tranquilo, obrigada.",chitchat,llm
+Foi massa trocar ideia contigo.,chitchat,llm
+"Mandou bem demais, máquina!",chitchat,llm
+"Tu é ligeiro no gatilho das respostas, hein.",chitchat,llm
+"Hahaha, não tava esperando essa.",chitchat,llm
+Essa piada foi tão ruim que deu a volta e ficou boa.,chitchat,llm
+KKKK eu ri alto aqui sozinho.,chitchat,llm
+"Calma, campeão, hoje eu tô devagar.",chitchat,llm
+"Seu senso de humor é meio quebrado, mas gostei.",chitchat,llm
+"Robô, cê tá muito filósofo pra uma quarta.",chitchat,llm
+"Parece que a semana tem oitenta dias, né?",chitchat,llm
+"Tá um calor de derreter pensamento, misericórdia.",chitchat,llm
+Queria só reclamar da vida por cinco segundos.,chitchat,llm
+Hoje eu tô felizão e queria dividir isso.,chitchat,llm
+"Bateu uma saudade do tempo de escola, do nada.",chitchat,llm
+"Meu dia foi uma montanha-russa, acredita?",chitchat,llm
+"Tô meio sem assunto, mas queria conversar.",chitchat,llm
+Vc curte quando a conversa fica aleatória?,chitchat,llm
+Me conta: você prefere papo sério ou zoeira?,chitchat,llm
+Posso te chamar por um apelido?,chitchat,llm
+Bora bater um papo sem compromisso?,chitchat,llm
+Só vim fazer companhia pro seu servidor kkk.,chitchat,llm
+"Tá me ouvindo direitinho, parceiro?",chitchat,llm
+Foi mal se me expressei estranho antes.,chitchat,llm
+"Desculpa o caps lock, nem percebi.",chitchat,llm
+"Sem estresse, tamo de boa.",chitchat,llm
+Acho q agora estamos nos entendendo.,chitchat,llm
+Voltei! Sentiu minha falta? rs,chitchat,llm
+Um abraço virtual e boa sorte nas próximas conversas!,chitchat,llm
+"Minha matrícula no Siscad ficou como pendente, qual setor pode verificar o motivo?",fora_dominio,llm
+"Troquei de número e não recebo mais o código para entrar no portal acadêmico, como recupero o acesso?",fora_dominio,llm
+O calendário de ajustes de disciplinas sai onde? Preciso mudar minha grade.,fora_dominio,llm
+Dá pra solicitar uma declaração de vínculo universitário sem ir pessoalmente à secretaria?,fora_dominio,llm
+"Pedi meu histórico escolar digital e veio faltando uma matéria, como contesto?",fora_dominio,llm
+Qual é o procedimento para pedir trancamento parcial de disciplina na UFMS?,fora_dominio,llm
+"Perdi o prazo de rematrícula, existe algum recurso administrativo que eu possa apresentar?",fora_dominio,llm
+A colação de grau tem inscrição separada ou a secretaria avisa os formandos?,fora_dominio,llm
+A segunda via do diploma tem alguma taxa? Queria entender os custos.,fora_dominio,llm
+Onde acompanho o andamento do meu pedido de aproveitamento de matérias?,fora_dominio,llm
+"Sou calouro e meu cadastro no sistema de estágios não reconhece meu CPF, com quem falo?",fora_dominio,llm
+Preciso assinar o termo de compromisso do estágio; qual plataforma a universidade usa?,fora_dominio,llm
+"Minha empresa atrasou o pagamento da bolsa de estágio, a coordenação pode orientar?",fora_dominio,llm
+Quais documentos a faculdade exige para registrar horas de estágio obrigatório?,fora_dominio,llm
+O supervisor mudou no meio do estágio. Preciso atualizar essa informação em algum formulário?,fora_dominio,llm
+Saiu resultado da seleção de monitoria? Não sei onde consultar a classificação.,fora_dominio,llm
+Fui selecionada para iniciação científica e queria saber como funciona o pagamento da bolsa.,fora_dominio,llm
+Como faço a inscrição no próximo edital de auxílio permanência estudantil?,fora_dominio,llm
+Meu benefício de assistência estudantil foi suspenso; onde vejo a justificativa?,fora_dominio,llm
+Qual documento serve para comprovar renda familiar na seleção de auxílio da universidade?,fora_dominio,llm
+Existe atendimento com psicólogo para estudante? Onde peço o agendamento?,fora_dominio,llm
+O setor de acessibilidade recebe pedidos de adaptação para fazer prova?,fora_dominio,llm
+Quem avalia solicitação de moradia estudantil e como acompanho o protocolo?,fora_dominio,llm
+Quando abre o cadastro para usar o laboratório de informática do meu curso?,fora_dominio,llm
+"não consgio logar no eduroam com minha conta institucional, tem algum suporte?",fora_dominio,llm
+Meu e-mail acadêmico parou de sincronizar no celular; onde abro chamado de TI?,fora_dominio,llm
+"A licença de software da UFMS está pedindo pagamento, isso é tratado pelo suporte?",fora_dominio,llm
+"Preciso redefinir a senha da VPN da universidade, qual é o caminho?",fora_dominio,llm
+Tem como reservar um computador para uma apresentação no laboratório multimídia?,fora_dominio,llm
+"O projetor da sala não liga, a manutenção recebe pedido pelo sistema?",fora_dominio,llm
+Como renovo um livro emprestado sem aparecer na biblioteca?,fora_dominio,llm
+"Tentei reservar uma sala de estudo e consta conflito de horário, com quem resolvo?",fora_dominio,llm
+A multa por atraso na devolução de livro dá pra pagar por pix ou só presencialmente?,fora_dominio,llm
+"Meu cartão da biblioteca foi bloqueado depois de devolver a obra, como regularizo?",fora_dominio,llm
+a copiadora do campus imprime colorido? qnt sai cada folha?,fora_dominio,llm
+A cantina do bloco de aulas aceita vale-alimentação ou apenas dinheiro?,fora_dominio,llm
+Sabe se o lanche da lanchonete do campus tem opção sem lactose?,fora_dominio,llm
+Qual é o horário de atendimento da papelaria dentro da universidade nas férias?,fora_dominio,llm
+Onde consigo cadastrar a placa da moto para utilizar o estacionamento do campus?,fora_dominio,llm
+O circular interno passa perto do bloco de laboratórios? Queria saber o trajeto.,fora_dominio,llm
+"O cartão de transporte estudantil tá mostrando saldo negativo, onde corrijo essa cobrança?",fora_dominio,llm
+"Queria solicitar meia-passagem para ir às aulas, mas meu comprovante de matrícula foi recusado.",fora_dominio,llm
+Existe bicicletário coberto próximo ao instituto de exatas?,fora_dominio,llm
+Como consultar o valor da inscrição na prova de proficiência em inglês da universidade?,fora_dominio,llm
+O certificado de um evento de extensão não apareceu no sistema; quem emite?,fora_dominio,llm
+"Me inscrevi num curso de extensão e não chegou confirmação no e-mail, onde acompanho a vaga?",fora_dominio,llm
+"o AVA n ta registrando a entrega do meu trablho, tem suporte pra isso?",fora_dominio,llm
+"Queria ver as notas lançadas pelo professor, mas minha conta do portal foi bloqueada.",fora_dominio,llm
+Como peço revisão de uma falta que foi marcada no dia em que apresentei atestado?,fora_dominio,llm
+Meu orientador não aparece na lista para cadastro do TCC. Quem atualiza?,fora_dominio,llm
+Tem edital de intercâmbio com inscrição aberta para alunos de graduação?,fora_dominio,llm
+A atlética tá cobrando anuidade; tem algum desconto pra estudante novo?,fora_dominio,llm
+É obrigatório pagar para participar das oficinas da semana acadêmica?,fora_dominio,llm
+Como faço para entrar no grupo do centro acadêmico do meu curso?,fora_dominio,llm
+O posto de saúde do campus precisa de encaminhamento para marcar consulta?,fora_dominio,llm
+Consigo emitir um comprovante de participação em projeto de extensão pelo portal?,fora_dominio,llm
+Qual notebook aguenta rodar Android Studio e máquina virtual sem travar?,fora_dominio,llm
+Você pode explicar a diferença entre regressão logística e árvore de decisão?,fora_dominio,llm
+Dá ruim se alguém colocar música numa caixinha de som enquanto tá almoçando no RU?,regras_uso,llm
