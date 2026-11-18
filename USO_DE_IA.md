@@ -11,7 +11,7 @@
 
 Os registros 1–5 e a reflexão histórica foram preservados. As afirmações de revisão
 nesses registros pertencem ao relato anterior do grupo e não foram revalidadas
-nesta sessão. As novas entradas 6–13 não declaram revisão humana concluída.
+nesta sessão. As novas entradas 6–14 não declaram revisão humana concluída.
 
 ## 1. Ferramentas usadas
  
@@ -38,8 +38,9 @@ nesta sessão. As novas entradas 6–13 não declaram revisão humana concluída
 | 11 | Contrato compartilhado e atualização desta declaração — Missão 03 | Codex leu o enunciado correto de 29 páginas e interfaces existentes e redigiu com assistência generativa `docs/CONTRATOS_COMPARTILHADOS.md`, distinguindo requisitos oficiais de decisões internas; preparou esta atualização preservando os registros anteriores | “MISSÃO 03 — Formalização definitiva dos contratos do RANGOT”: conferir o PDF, formalizar o contrato e registrar a assistência, com alterações restritas a dois documentos | Implementação documental autorizada nesta missão; revisão humana do texto ainda pendente. Não houve geração de frases, treinamento, chamada ao OpenRouter ou avaliação final; a situação da gravação e dos commits é informada no relatório da missão |
 | 12 | Auditoria científica reproduzível — Missão 04 | Codex implementou auditoria offline em `scripts/auditar_dados.py`, testes com fixtures fictícias de software e `docs/PROTOCOLO_DADOS.md`; reutilizou a normalização existente, preparou manifesto sem textos e propostas automáticas pendentes de revisão, sem formar conjuntos finais | “MISSÃO 04 — Implementação da auditoria científica dos dados do RANGOT”: ler brutos sem modificá-los, sinalizar qualidade/duplicatas, avaliar divisões por envio e validar mínimos com testes offline | Implementação autorizada em quatro arquivos; testes e resultados da execução são informados no relatório da missão. Revisão humana de código, rótulos e divisão permanece pendente. Fixtures são exclusivas dos testes de software, não frases para os CSVs científicos; sem treinamento, avaliação final ou OpenRouter |
 | 13 | Fluxo de revisão humana — Missão 05 | Codex estendeu o auditor existente para exportar planilha local ignorada com textos originais e decisões pendentes, validar/importar decisões declaradas, recontar aprovadas e simular divisões por envio; acrescentou testes fictícios e documentação, sem aprovar rótulos nem criar conjuntos oficiais | “MISSÃO 05 — Curadoria humana e preparação dos conjuntos do RANGOT”: preservar textos/origens, permitir correções humanas, manter revisão privada e reavaliar 29/19, 30/18 e 31/17 sem modelos | Implementação e preparação da planilha autorizadas; decisões e aprovação da divisão pertencem ao responsável humano e começam pendentes. Testes e verificações técnicas são informados no relatório da missão. Nenhum treinamento, avaliação final, geração para os CSVs científicos ou OpenRouter foi executado |
+| 14 | Ampliação da base e curadoria prioritária — Missão 06 | Codex comparou as versões e backups sem depender da ordem, implementou migração rastreável de decisões, examinou semanticamente as 669 respostas humanas e preparou sugestões privadas por ID/hash, uma revisão ampliada pendente e uma seleção prioritária com proposta de divisão por envio | “MISSÃO 06 — Atualizar a base humana para 67 envios e preparar a curadoria definitiva”: verificar preservação dos 48 envios e 19 adições, preservar origens/textos, planejar mínimos sem modelos e facilitar revisão humana | Código, testes e documentação implementados; a gravação nativa da substituição foi bloqueada pelo sandbox antes de alterar base/revisão ativas. Arquivos privados da nova revisão e proposta preparados pelo editor. Rótulos e divisão continuam sem aprovação humana. Sem treinamento, avaliação final, geração adicional de dados científicos ou OpenRouter |
 
-Os resumos das entradas 8–13 correspondem às instruções desta conversa; suas
+Os resumos das entradas 8–14 correspondem às instruções desta conversa; suas
 íntegras não estão arquivadas no repositório. Os resumos retrospectivos 6–7
 registram o relato do responsável, sem reconstruir prompts anteriores como se
 fossem transcrições verificadas.
@@ -49,7 +50,7 @@ fossem transcrições verificadas.
 As três afirmações históricas abaixo são preservadas do relato anterior; esta
 sessão não comprova a autoria externa desses materiais. Não estender essas
 afirmações à triagem dos CSVs ou à redação deste contrato, que receberam apoio
-generativo conforme as entradas 8–13.
+generativo conforme as entradas 8–14.
  
 - Escolha do tema e definição das intenções (feitas pelo grupo na proposta de 23/10/2026).
 - Informação sobre as formas de pagamento (débito, crédito, Pix).
@@ -82,6 +83,8 @@ software não significam que as frases ou a divisão de treino/teste foram aprov
 por humanos; essa revisão permanece pendente.
 
 ## 5. Pendências para fechar a declaração
+
+- Missão 06: o responsável precisa revisar as sugestões semânticas e a planilha prioritária, confirmar ou corrigir a divisão e concluir a substituição nativa dos brutos. Os números projetados não são aprovação humana ou resultados de modelos.
 
 - Confirmar ferramenta/modelo, operador e prompts originais dos usos retrospectivos de ChatGPT e da preparação do Codex, sem inferir versões a partir da ferramenta atual.
 - Recuperar ferramenta/modelo, prompts e revisão da geração original das 132 linhas sintéticas, confirmadas como IA pelo responsável; as linhas têm múltiplas respostas e não equivalem a 132 frases. Essa atividade não está declarada como concluída ou revisada nesta atualização.

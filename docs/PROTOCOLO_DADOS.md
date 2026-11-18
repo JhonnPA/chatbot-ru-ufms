@@ -2,12 +2,18 @@
 
 ## Escopo e autoridade
 
-A implementação iniciada na Missão 04 e estendida na Missão 05 autoriza somente
+A implementação iniciada na Missão 04 e estendida nas Missões 05–06 autoriza somente
 `scripts/auditar_dados.py`,
 `tests/test_auditar_dados.py`, este protocolo e `USO_DE_IA.md`, na branch
 `feature/curadoria-dados-rangot`. Os limites da Missão 03 registrados no contrato
 são históricos; esta missão não autoriza formar os conjuntos finais. A Missão 05
 também autoriza a planilha local ignorada `dados/_brutos/revisao_humana.csv`.
+A Missão 06 permite incorporar a nova exportação, preservar backups e preparar
+planilhas privadas, sem criar conjuntos oficiais ou gerar novas frases.
+
+Prazo prorrogado para **19/11/2026 às 23h59**, conforme informação do responsável
+na Missão 06. Este registro não é uma alteração do PDF nem uma verificação externa
+da comunicação do professor; o prazo impresso no enunciado permanece histórico.
 
 Fonte científica: [enunciado oficial](../referencias/_brutos/enunciado_professor.pdf),
 29 páginas, especialmente pp. 8–9, 17–20 e 22–27, e
@@ -47,9 +53,10 @@ manifesto JSON completo, com células, rótulos propostos, motivos de revisão,
 grupos de duplicatas, proximidades e planos. Ambos omitem textos, cabeçalhos,
 timestamps e identificadores pessoais. Erros de entrada/argumentos não repetem
 conteúdo recebido. A auditoria e a importação de decisões não gravam arquivos.
-Somente `--exportar-revisao` cria a planilha privada descrita abaixo; nenhum modo
-cria os conjuntos oficiais ou atualiza o Git. `-B` e a configuração do carregador
-evitam caches Python.
+`--exportar-revisao` e `--exportar-prioritaria` criam as planilhas privadas;
+`--atualizar-base` substitui somente base/revisão locais após conferir backups.
+Nenhum modo cria os conjuntos oficiais ou atualiza o Git. `-B` e a configuração
+do carregador evitam caches Python.
 
 A opção `--envios-teste` aceita uma lista de números de envio separados por
 vírgula, sem espaços. Ela simula somente a divisão explicitamente informada,
@@ -169,8 +176,9 @@ O caminho deve continuar ignorado e não versionado; exportação e importação
 verificam essa condição e recusam links simbólicos. A criação é exclusiva:
 arquivo existente nunca é sobrescrito, mesmo que ainda esteja pendente.
 
-Foram preparadas **1.711 linhas**, uma por resposta preenchida: 479 humanas e
-1.232 sintéticas. As 89 células vazias ficam fora da planilha. Duplicatas continuam
+Na fotografia da Missão 05 foram preparadas **1.711 linhas**, uma por resposta
+preenchida: 479 humanas e 1.232 sintéticas. As 89 células vazias ficam fora da
+planilha. Duplicatas continuam
 em linhas próprias para permitir julgamento individual; as contagens de capacidade
 são deduplicadas depois. Todos os campos `decisao_humana` começam em `pendente`,
 e `rotulo_revisado`, `uso_autorizado` e observações começam vazios.
@@ -269,6 +277,146 @@ Primeiro importar decisões reais e aprovar uma divisão; somente em missão
 posterior autorizada construir os CSVs oficiais e suprir faltas, usando apenas
 o treino aprovado para orientar eventual geração.
 
+## Incorporação dos 67 envios — Missão 06
+
+### Evidência de integridade e estado da substituição
+
+A exportação nova tem 67 envios, 11 colunas e 669 respostas preenchidas; a anterior
+tem 48 envios e 479 respostas. Os cabeçalhos são iguais, as larguras consistentes
+e não há duplicação integral de envio ou de suas dez respostas na nova versão.
+A comparação exata por registro, independente da ordem, preservou todos os
+48 envios, incluindo cada resposta e o metadado temporal original, sem publicar
+esse metadado. São 19 adições, nas posições 49–67 da nova exportação.
+
+| Arquivo privado | SHA-256 |
+|---|---|
+| Base anterior e `formulario_humano_backup_48.csv` | `b27a639bc111689ca9a42c024e2b45f1f9b53f7879affc4b63799e417b5fc304` |
+| `formulario_humano_novo.csv` | `53aef836b97ed2c3d46afa2ff15bc9b2b07225189e6fed498123fe573d20448c` |
+| Revisão anterior e `revisao_humana_backup_1711.csv` | `9e6334c152c89b6345b49c1fa871c372cd8bee5d50d9f34812eda5df2d026379` |
+| `sinteticas_llm.csv` | `87dd6717fb62280cda1cdb7fbb29c8b5730153cdaf3ccf49448998d73a0f44e8` |
+
+O sandbox bloqueou a gravação nativa antes de criar o journal ou substituir os
+arquivos ativos. **A base ativa continua com 48 envios e a revisão ativa com
+1.711 linhas.** A nova versão foi processada em memória e seus artefatos privados
+foram preparados pelo editor. Não substituir a exportação pelo editor: os bytes
+incluem CRLF e ausência de quebra final, que precisam permanecer íntegros.
+
+Arquivos preparados e ignorados:
+
+- `revisao_humana_67_preparada.csv`: 1.901 respostas, 669 humanas e 1.232 sintéticas;
+  nenhuma aprovação, textos originais exatos e IDs das primeiras 48 participações
+  preservados. As 89 células vazias das duas fontes ficam fora.
+- `migracao_48_67_preparada.json`: hashes e vínculos entre IDs das versões;
+  explicitamente marcado como preparação com substituição bloqueada.
+- `triagem_semantica_67.json`: sugestões do Codex por ID e hash do texto, vinculadas
+  ao hash da nova fonte; não contém textos, timestamps ou aprovações humanas.
+- `plano_curadoria_67.json` e `revisao_prioritaria.csv`: proposta e seleção reduzida
+  descritas abaixo. Nunca versionar ou publicar esses arquivos privados.
+
+Para concluir a migração nativa, manualmente no checkout:
+
+```bash
+python3 -I -B scripts/auditar_dados.py --planejar-atualizacao
+python3 -I -B scripts/auditar_dados.py --atualizar-base
+python3 -I -B scripts/auditar_dados.py --importar-revisao
+```
+
+O comando de atualização exige base/revisão ativas idênticas aos respectivos
+backups, verifica novamente as entradas antes da gravação e cria
+`migracao_48_67.json` sem sobrescrever um journal existente. Cada substituição
+usa arquivo temporário no próprio diretório e `os.replace`; as duas substituições
+não constituem uma transação única. Se ocorrer falha intermediária, conferir
+journal, hashes e backups antes de qualquer recuperação manual. Não repetir o
+comando após migração concluída, nem sobrescrever backups para contornar erros.
+
+### Triagem semântica e busca por envio
+
+O Codex examinou as respostas, considerando o pedido completo, ironia, elipses,
+erros de digitação e tópicos externos. As sugestões por resposta estão no arquivo
+privado de triagem, não em regras que copiam o rótulo da coluna para futuras bases.
+Rótulos humanos existentes prevalecem sobre a triagem; rejeições não são revertidas.
+
+Das 669 respostas humanas: 581 são candidatas provisórias, 36 ambíguas,
+34 metarrespostas, seis com múltiplas intenções e 12 fora do catálogo sem rótulo
+único seguro. Após deduplicação, há **570 candidatas distintas**. Essa triagem é
+assistência generativa, não revisão humana. Frases elípticas selecionadas para
+treino continuam exigindo julgamento sobre sua classificação sem contexto.
+
+A nova busca compara 29, 30, 31, 33, 35, 37 e 39 envios para teste, largura cinco.
+Preserva cada envio em um lado e distribui proporcionalmente as 19 adições entre
+os lados, usando a versão de coleta, sem publicar ou usar timestamps para seleção.
+O objetivo é cobertura dos mínimos e capacidade humana do treino, sem desempenho
+de modelos. É uma busca limitada: uma alternativa com falta não prova inexistência
+de outra solução com o mesmo tamanho.
+
+Na nova busca, duplicatas entre envios não obrigam agrupar grandes cadeias de
+cumprimentos: a ocorrência do lado de treino fica em quarentena quando coincide
+com a reserva de teste. Quase duplicatas também retiram candidatas de treino;
+possíveis paráfrases ainda exigem revisão humana. As modalidades anteriores do
+auditor preservam seu comportamento e continuam detectando sobreposições.
+
+### Proposta condicionada à aprovação
+
+Proposta: **31 envios para reserva de teste e 36 para treino**, com nove dos
+19 envios novos no lado do teste e dez no treino. IDs completos ficam no plano
+privado. Nenhuma divisão foi aprovada ou congelada.
+
+| Classe | Candidatas humanas distintas, antes da divisão | Humanas selecionadas para treino | Sintéticas existentes selecionadas | Teste selecionado | Complemento projetado |
+|---|---:|---:|---:|---:|---:|
+| cardapio | 87 | 42 | 8 | 15 | 0 |
+| horarios | 69 | 36 | 14 | 15 | 0 |
+| valores | 63 | 33 | 17 | 15 | 0 |
+| recarga_creditos | 63 | 32 | 18 | 15 | 0 |
+| cadastro | 53 | 27 | 23 | 15 | 0 |
+| regras_uso | 59 | 29 | 21 | 15 | 0 |
+| chitchat | 54 | 23 | 21 | 30 | 56 |
+| fora_dominio | 122 | 58 | 92 | 40 | 0 |
+| **Total** | **570** | **280** | **214** | **160** | **56** |
+
+As 56 faltantes são uma projeção com as sugestões atuais: rejeições/correções e
+recuperação de frases existentes podem mudar o número. Nenhuma frase foi gerada.
+Com aprovação e complemento válido, seriam 550 exemplos de treino, 280 humanos
+(50,91%), 50 por intenção, 100 sociais e 150 externos. O teste teria 160 humanos,
+15 por intenção, 30 sociais e 40 externos. Há zero interseções normalizadas na
+proposta; isso não certifica ausência de paráfrases sem julgamento humano.
+
+O lado reservado ao teste tem 236 candidatas distintas, das quais 160 foram
+priorizadas; as 76 restantes continuam reservadas, sem transferência para treino.
+Sem revisão não há exemplos aprovados para os conjuntos oficiais. Conteúdo da
+reserva não deve orientar futuras gerações, tuning ou escolha de modelos.
+
+### Procedimento rápido de aprovação
+
+1. Abra localmente `revisao_prioritaria.csv` como CSV UTF-8 com vírgulas, todos os
+   campos como texto. São **654 linhas**, em vez de 1.901: 160 para teste,
+   280 humanas para treino e 214 sintéticas existentes para treino.
+2. Filtre primeiro `uso_proposto=teste`, depois humanas de treino, por fim sintéticas.
+   Examine texto e rótulo de cada linha; priorize os avisos de ambiguidade,
+   duplicação e possível paráfrase. Não envie o material a geradores de dados.
+3. Edite somente `decisao_humana` e `rotulo_corrigido`: `aprovar` aceita a sugestão,
+   `corrigir` exige uma das oito classes válidas, `rejeitar` exclui e `pendente`
+   mantém fora. Não alterar textos, IDs, origem, uso proposto, avisos ou hash.
+4. Valide após salvar. Antes da migração nativa:
+
+   ```bash
+   python3 -I -B scripts/auditar_dados.py --importar-prioritaria --usar-exportacao-nova
+   ```
+
+   Depois da migração, use o mesmo comando **sem** `--usar-exportacao-nova`.
+   A importação reconta apenas decisões explícitas, aceita revisão parcial e não
+   grava na planilha mestre nem cria os CSVs oficiais. Guarda-se a própria planilha
+   prioritária como registro das decisões para a próxima missão.
+5. Confirme ao agente as decisões e a aprovação dos IDs de envio propostos.
+   Rejeições que inviabilizem mínimos exigem nova seleção ou coleta, sem forçar
+   aprovação. O congelamento e a construção dos CSVs ficam para nova autorização.
+
+Para reproduzir a busca antes da migração:
+`python3 -I -B scripts/auditar_dados.py --planejar-curadoria --usar-exportacao-nova`.
+`--exportar-prioritaria` prepara os arquivos somente se ainda não existirem;
+recusa sobrescrever trabalho do revisor. O hash do contexto vincula seleção,
+rótulos propostos, lados e versões das fontes. É integridade, não autenticação
+da identidade do responsável que declara as decisões.
+
 ## Evidências e próximos passos
 
 O script confere novamente os bytes dos dois arquivos ao terminar e falha se uma
@@ -281,9 +429,11 @@ privacidade, determinismo e preservação das entradas.
 As contagens semânticas de auditorias anteriores foram propostas não persistidas;
 não são oráculo dos testes nem constantes para forçar 121 frases humanas.
 A ferramenta deve expor divergências para revisão, não esconder insuficiências.
-Após revisão humana, será necessária nova autorização para registrar decisões,
-definir a divisão e congelar os CSVs finais. Somente treino/CV poderá orientar
-modelos, hiperparâmetros, limiar e eventual geração futura.
+Decisões humanas podem ser registradas nas planilhas privadas desta missão.
+Construir e congelar os CSVs finais exige nova autorização após aprovação da
+divisão. Somente treino/CV poderá orientar modelos, hiperparâmetros e limiar.
+Uma futura geração deve receber apenas o treino aprovado e o protocolo de
+faltas, em contexto que não contenha as respostas reservadas ao teste.
 
 ### Fotografia reproduzível da Missão 04
 
