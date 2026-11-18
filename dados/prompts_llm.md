@@ -164,3 +164,33 @@ Somente após revisão e autorização, juntar ao treino e conferir: 50 por cada
 ```
 
 </details>
+
+## Complemento final fornecido e curadoria — Missão 07G
+
+O responsável forneceu cinco candidatas independentes de `regras_uso`, todas
+`origem=llm`, no arquivo privado `dados/_brutos/candidatas_regras_07g.csv`.
+SHA-256 da fonte: `a03f06e11ffe6aeb6c4965eec5b3d0849af0130def86a8dd2ce79d7c5a19d003`.
+Ferramenta, modelo, prompt e comprovação do ambiente de geração dessas cinco não
+foram fornecidos. Esses metadados continuam pendentes; não atribuir a geração
+ao ChatGPT/GPT-6 da 07D nem inventar um prompt de geração. A origem LLM foi
+declarada expressamente pelo responsável. Esta sessão não gerou novas frases.
+
+Solicitação real de curadoria (resumo): “MISSÃO 07G — Conclusão definitiva dos
+dados do RANGOT”: analisar cinco candidatas, selecionar no máximo uma distinta,
+natural e inequivocamente de regras_uso, controlar duplicatas e contaminação sem
+adaptar exemplos pelo teste e construir treino com os 549 anteriores e a selecionada.
+
+O Codex examinou as cinco e selecionou G07G:003, terceira linha de dados (linha 4
+do arquivo), sobre usar caixinha de som durante o almoço no RU. A intenção de
+conduta e o domínio são explícitos; não se identificou paráfrase trivial no treino
+nem sinal de contaminação. As outras quatro ficaram fora do conjunto final.
+A decisão é curadoria assistida por IA sob autorização expressa, sem confirmação
+de revisão manual individual do grupo. G07D:013 continua excluída.
+
+O treino oficial foi materializado com 550 exemplos, 268 humanos e 282 LLM,
+48,73% humano, atendendo aos mínimos por classe. SHA-256:
+`fc260493bf144e3a6b5ecac2e2e7064f31b53dda597948cfc8e689fea5b665f5`.
+As insuficiências descritas na conferência histórica 07E foram resolvidas nessa
+etapa, preservando os registros anteriores. O teste foi usado apenas para
+verificação de contaminação e conservou seus bytes e hash. Não houve treinamento
+de classificadores nem avaliação final.
