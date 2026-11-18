@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Auditoria determinística dos dois brutos, sem escrever dados ou aprovar rótulos.
+"""Auditoria e revisão dos dois brutos, sem formar conjuntos oficiais.
 
 Só usa biblioteca padrão e a função de normalização existente. O manifesto JSON
 contém identificadores e sugestões, nunca textos, timestamps ou dados pessoais.
+A exportação textual é restrita à planilha privada ignorada, inicialmente pendente.
 """
 from __future__ import annotations
 
@@ -14,6 +15,7 @@ import io
 import json
 import re
 import sys
+import subprocess
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
@@ -29,7 +31,7 @@ _texto = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_texto)
 normalizar = _texto.normalizar
 
-VERSAO = "1"
+VERSAO = "2"
 INTENCOES = ("cardapio", "horarios", "valores", "recarga_creditos", "cadastro", "regras_uso")
 CLASSES = INTENCOES + ("fora_dominio", "chitchat")
 MIN_TREINO = dict.fromkeys(INTENCOES, 50) | {"fora_dominio": 150, "chitchat": 100}
@@ -67,10 +69,25 @@ ASSUNTO = re.compile(r"\b(ru|restaurante|refeitorio|bandejao|cartao|refeic\w*|al
 META = re.compile(r"^(sim|nao|n|pelo insta|de hoje|eu nao sei p|pergunta rapida|gostaria de saber todas as opcoes)$|tal coisa|nao tenho nenhuma duvida|nao agradeco|normalmente eu so fecho|desperdicio de tokens")
 PESSOAL = re.compile(r"[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}|\b\d{9,}\b")
 BLOQUEIOS = {"vazia", "sem_texto_normalizado", "metarresposta", "rotulo_inconclusivo", "multiplas_intencoes", "possivel_dado_pessoal", "dominio_indefinido"}
+ARQUIVO_REVISAO = "dados/_brutos/revisao_humana.csv"
+CAMPOS_REVISAO = ("id_resposta", "id_envio", "fonte_original", "origem", "coluna_original",
+                  "texto_original", "rotulo_sugerido", "motivo_sinalizacao", "sha256_fonte",
+                  "rotulo_revisado", "decisao_humana", "uso_autorizado", "observacoes_revisao")
+EDITAVEIS_REVISAO = {"rotulo_revisado", "decisao_humana", "uso_autorizado", "observacoes_revisao"}
+DECISOES = {"", "pendente", "aprovar", "corrigir", "rejeitar"}
+USOS = {"", "treino", "teste", "ambos"}
+AUTOIDENTIFICACAO = re.compile(r"\b(me chamo|meu nome e|meu cpf|meu rga|meu telefone|meu email)\b")
 
 
 class ErroAuditoria(ValueError):
     """Mensagens exclusivamente técnicas: nunca incluir conteúdo das entradas."""
+
+
+class ErroRevisao(ErroAuditoria):
+    def __init__(self, codigo, identificador=None):
+        super().__init__(codigo)
+        self.codigo = codigo
+        self.identificador = identificador
 
 
 @dataclass(frozen=True)
@@ -118,6 +135,213 @@ class Analise:
             "alertas": list(self.alertas), "candidata_provisoria": self.candidata,
             "revisao_humana": "pendente", "aprovado": False,
         }
+
+
+@dataclass(frozen=True)
+class AnaliseRevisada(Analise):
+    decisao_humana: str = "pendente"
+    uso_autorizado: str = ""
+    rotulo_automatico: str | None = None
+
+    @property
+    def candidata(self):
+        # Revisor pode superar heurísticas, nunca ausência de texto ou privacidade.
+        return (self.decisao_humana in {"aprovar", "corrigir"}
+                and self.sugerido in CLASSES and bool(self.celula.normalizado)
+                and not impedimentos_revisao(self.celula.texto))
+
+    def publico(self):
+        resultado = super().publico()
+        resultado.update(rotulo_sugerido=self.rotulo_automatico,
+                         rotulo_revisado=self.sugerido if self.candidata else None,
+                         decisao_humana=self.decisao_humana,
+                         uso_autorizado=self.uso_autorizado,
+                         revisao_humana=("pendente" if self.decisao_humana == "pendente"
+                                         else "decisao_declarada_no_csv"), aprovado=self.candidata)
+        return resultado
+
+
+def permitida_no_uso(analise, uso):
+    return analise.candidata and getattr(analise, "uso_autorizado", "") in {"", "ambos", uso}
+
+
+def impedimentos_revisao(texto):
+    motivos = []
+    if not texto.strip():
+        motivos.append("vazia")
+    if PESSOAL.search(texto) or AUTOIDENTIFICACAO.search(normalizar(texto)):
+        motivos.append("possivel_dado_pessoal")
+    if texto.lstrip().startswith(("=", "+", "-", "@")):
+        motivos.append("formula_de_planilha")
+    return motivos
+
+
+def textos_originais(snapshots):
+    """Valores lógicos exatos do CSV, incluindo espaços; nunca o metadado temporal."""
+    originais = {}
+    for fonte, bruto in snapshots.items():
+        deslocamento = 1 if fonte == "H" else 0
+        leitor = csv.reader(io.StringIO(bruto.decode("utf-8-sig"), newline=""), strict=True)
+        next(leitor)
+        for envio, linha in enumerate(leitor, 1):
+            for j in range(deslocamento, len(linha)):
+                originais[f"{fonte}{envio:04d}:C{j + 1:02d}"] = linha[j]
+    return originais
+
+
+def preparar_revisao(celulas, snapshots, proximos):
+    originais = textos_originais(snapshots)
+    hashes = {f: hashlib.sha256(b).hexdigest() for f, b in snapshots.items()}
+    relacionados = defaultdict(set)
+    for tipo, grupos in (("duplicata_exata", grupos_duplicados(celulas, False)),
+                         ("duplicata_normalizada", grupos_duplicados(celulas))):
+        for grupo in grupos:
+            for identificador in grupo:
+                relacionados[identificador].add(tipo + ":" + ",".join(grupo))
+    for par in proximos:
+        tipos = (["quase_duplicata"] if par["quase_duplicata"] else [])
+        if par["possivel_parafrase"]:
+            tipos.append("possivel_parafrase")
+        for esquerda, direita in ((par["a"], par["b"]), (par["b"], par["a"])):
+            for identificador in esquerda:
+                for tipo in tipos:
+                    relacionados[identificador].add(tipo + ":" + ",".join(direita))
+    linhas, excluidas = [], defaultdict(list)
+    analises = marcar_colunas_conflitantes([analisar(c) for c in celulas])
+    for analise in analises:
+        c = analise.celula
+        original = originais[c.id]
+        bloqueios = impedimentos_revisao(original)
+        if bloqueios:
+            for motivo in bloqueios:
+                excluidas[motivo].append(c.id)
+            continue
+        motivos = set(analise.alertas) | relacionados[c.id]
+        if not motivos:
+            motivos.add("conferir_texto_rotulo_e_origem")
+        linhas.append({
+            "id_resposta": c.id, "id_envio": f"{c.fonte}{c.envio:04d}",
+            "fonte_original": FONTES[c.fonte][0], "origem": c.origem,
+            "coluna_original": str(c.coluna), "texto_original": original,
+            "rotulo_sugerido": analise.sugerido or "",
+            "motivo_sinalizacao": ";".join(sorted(motivos)), "sha256_fonte": hashes[c.fonte],
+            "rotulo_revisado": "", "decisao_humana": "pendente",
+            "uso_autorizado": "", "observacoes_revisao": "",
+        })
+    return linhas, dict(sorted(excluidas.items()))
+
+
+def escrever_revisao_fluxo(fluxo, linhas):
+    escritor = csv.DictWriter(fluxo, fieldnames=CAMPOS_REVISAO, lineterminator="\n")
+    escritor.writeheader()
+    escritor.writerows(linhas)
+
+
+def importar_revisao_fluxo(fluxo, esperadas):
+    esperadas = {r["id_resposta"]: r for r in esperadas}
+    leitor = csv.DictReader(fluxo, strict=True)
+    try:
+        cabecalho = leitor.fieldnames
+    except (csv.Error, UnicodeError) as exc:
+        raise ErroRevisao("csv_revisao_invalido") from exc
+    if cabecalho != list(CAMPOS_REVISAO):
+        raise ErroRevisao("cabecalho_revisao_invalido")
+    decisoes, rotulos = {}, defaultdict(set)
+    try:
+        for linha in leitor:
+            identificador = linha.get("id_resposta")
+            if identificador not in esperadas or identificador in decisoes:
+                raise ErroRevisao("ids_revisao_desconhecidos_ou_repetidos")
+            if None in linha or any(v is None for v in linha.values()):
+                raise ErroRevisao("largura_revisao_invalida", identificador)
+            original = esperadas[identificador]
+            if any(linha[c] != original[c] for c in CAMPOS_REVISAO if c not in EDITAVEIS_REVISAO):
+                raise ErroRevisao("integridade_revisao_violada", identificador)
+            decisao = linha["decisao_humana"].strip() or "pendente"
+            revisado = linha["rotulo_revisado"].strip()
+            uso = linha["uso_autorizado"].strip()
+            if decisao not in DECISOES or uso not in USOS:
+                raise ErroRevisao("decisao_ou_uso_invalido", identificador)
+            if revisado and revisado not in CLASSES:
+                raise ErroRevisao("rotulo_revisado_invalido", identificador)
+            if original["origem"] == "llm" and uso in {"teste", "ambos"}:
+                raise ErroRevisao("sintetica_nao_pode_ser_teste", identificador)
+            if impedimentos_revisao(linha["observacoes_revisao"].strip() or "observacao vazia"):
+                raise ErroRevisao("observacao_inadequada", identificador)
+            if decisao == "aprovar":
+                if original["rotulo_sugerido"] not in CLASSES:
+                    raise ErroRevisao("aprovacao_exige_rotulo_sugerido_ou_correcao", identificador)
+                if revisado and revisado != original["rotulo_sugerido"]:
+                    raise ErroRevisao("troca_de_rotulo_exige_corrigir", identificador)
+                revisado = original["rotulo_sugerido"]
+            if decisao == "corrigir" and not revisado:
+                raise ErroRevisao("correcao_exige_rotulo", identificador)
+            if decisao in {"aprovar", "corrigir"}:
+                if not normalizar(original["texto_original"]):
+                    raise ErroRevisao("sem_texto_classificavel", identificador)
+                rotulos[normalizar(original["texto_original"])].add(revisado)
+                if len(rotulos[normalizar(original["texto_original"])]) > 1:
+                    raise ErroRevisao("duplicatas_com_rotulos_revisados_conflitantes", identificador)
+            # Não carregar texto livre de observação para os relatórios públicos.
+            decisoes[identificador] = {"decisao": decisao, "rotulo": revisado, "uso": uso}
+    except (csv.Error, UnicodeError) as exc:
+        raise ErroRevisao("csv_revisao_invalido") from exc
+    if set(decisoes) != set(esperadas):
+        raise ErroRevisao("revisao_com_linhas_ausentes")
+    return decisoes
+
+
+def aplicar_revisoes(analises, decisoes):
+    return [AnaliseRevisada(a.celula, decisoes.get(a.celula.id, {}).get("rotulo") or None,
+                           a.evidencias, a.alertas,
+                           decisoes.get(a.celula.id, {}).get("decisao", "pendente"),
+                           decisoes.get(a.celula.id, {}).get("uso", ""), a.sugerido)
+            for a in analises]
+
+
+def resumir_revisao(linhas, decisoes=None):
+    decisoes = decisoes or {}
+    pendentes = {c: {"humano": 0, "llm": 0} for c in CLASSES + ("sem_rotulo",)}
+    estados = Counter()
+    for linha in linhas:
+        d = decisoes.get(linha["id_resposta"], {}).get("decisao", "pendente")
+        estados[d] += 1
+        if d == "pendente":
+            c = linha["rotulo_sugerido"] or "sem_rotulo"
+            pendentes[c][linha["origem"]] += 1
+    return {"linhas": len(linhas), "decisoes": dict(sorted(estados.items())),
+            "pendentes_por_rotulo_sugerido_e_origem": pendentes}
+
+
+def caminho_revisao_local():
+    p = RAIZ
+    for parte in Path(ARQUIVO_REVISAO).parts:
+        p = p / parte
+        if p.is_symlink():
+            raise ErroRevisao("revisao_simbolica_nao_permitida")
+    ignorado = subprocess.run(["git", "-C", str(RAIZ), "check-ignore", "-q", "--", ARQUIVO_REVISAO],
+                             capture_output=True, check=False)
+    if ignorado.returncode != 0:
+        raise ErroRevisao("revisao_deve_estar_ignorada_e_nao_versionada")
+    return p
+
+
+def exportar_revisao_local(linhas):
+    caminho = caminho_revisao_local()
+    try:
+        # Exclusivo: não sobrescrever trabalho humano existente, nem um symlink.
+        with caminho.open("x", encoding="utf-8-sig", newline="") as fluxo:
+            escrever_revisao_fluxo(fluxo, linhas)
+    except FileExistsError as exc:
+        raise ErroRevisao("revisao_ja_existe_nao_sobrescrever") from exc
+    except OSError as exc:
+        raise ErroRevisao("nao_foi_possivel_gravar_revisao") from exc
+
+
+def ler_revisao_local(linhas):
+    bruto = caminho_revisao_local().read_bytes()
+    fluxo = io.StringIO(bruto.decode("utf-8-sig"), newline="")
+    return importar_revisao_fluxo(fluxo, linhas), hashlib.sha256(bruto).hexdigest()
 
 
 def ler_csv(fluxo, fonte):
@@ -350,13 +574,13 @@ def avaliar_divisao(analises, envios_teste, n_envios, proximos):
     if not teste_ids <= set(range(1, n_envios + 1)):
         raise ErroAuditoria("envios_invalidos")
     humanos = [a for a in analises if a.celula.fonte == "H" and a.candidata]
-    teste = [a for a in humanos if a.celula.envio in teste_ids]
-    treino_h = [a for a in humanos if a.celula.envio not in teste_ids]
+    teste = [a for a in humanos if a.celula.envio in teste_ids and permitida_no_uso(a, "teste")]
+    treino_h = [a for a in humanos if a.celula.envio not in teste_ids and permitida_no_uso(a, "treino")]
     ids_teste = {a.celula.id for a in teste}
     todos_h = {a.celula.normalizado for a in analises if a.celula.fonte == "H" and a.celula.normalizado}
     ids_treino = {a.celula.id for a in analises if a.candidata and (
-        (a.celula.fonte == "H" and a.celula.envio not in teste_ids) or
-        (a.celula.fonte == "S" and a.celula.normalizado not in todos_h))}
+        (a.celula.fonte == "H" and a.celula.envio not in teste_ids and permitida_no_uso(a, "treino")) or
+        (a.celula.fonte == "S" and a.celula.normalizado not in todos_h and permitida_no_uso(a, "treino")))}
     retirar, parafrases = set(), 0
     for p in proximos:
         lados = (set(p["a"]), set(p["b"]))
@@ -367,7 +591,7 @@ def avaliar_divisao(analises, envios_teste, n_envios, proximos):
                 elif p["possivel_parafrase"]:
                     parafrases += 1
     treino_h = [a for a in treino_h if a.celula.id not in retirar]
-    sinteticos = [a for a in analises if a.celula.fonte == "S" and a.candidata
+    sinteticos = [a for a in analises if a.celula.fonte == "S" and permitida_no_uso(a, "treino")
                   and a.celula.normalizado not in todos_h and a.celula.id not in retirar]
     h, s, t = distribuir(treino_h), distribuir(sinteticos), distribuir(teste)
     capacidade = {c: h["por_classe"][c] + s["por_classe"][c] for c in CLASSES}
@@ -388,6 +612,8 @@ def avaliar_divisao(analises, envios_teste, n_envios, proximos):
         "minimos_treino_projetados_apos_complemento": validar_minimos(MIN_TREINO.copy(), h_planejadas),
         "teste_minimos": teste_minimos,
         "sobreposicoes_normalizadas": [list(p) for p in sobreposicoes],
+        "aprovadas_nao_alocadas_por_uso": sorted(a.celula.id for a in humanos
+            if not permitida_no_uso(a, "teste" if a.celula.envio in teste_ids else "treino")),
         "celulas_quarentena_proximidade": sorted(retirar),
         "sinais_parafrase_a_revisar": parafrases,
         "viavel_condicionada_a_revisao_e_complemento": teste_minimos["minimos_atendidos"] and h_planejadas * 5 >= sum(MIN_TREINO.values()) and not sobreposicoes,
@@ -409,7 +635,8 @@ def propor_divisoes(analises, n_envios, proximos, tamanhos=(29, 30, 31), largura
         return (-cobertura, sum(counts), ids)
 
     for grupo in componentes:
-        dist = distribuir([a for a in humanos if a.celula.envio in grupo])["por_classe"]
+        dist = distribuir([a for a in humanos if a.celula.envio in grupo
+                           and permitida_no_uso(a, "teste")])["por_classe"]
         novos = defaultdict(list)
         for (n, social), candidatos in estados.items():
             novos[n, social].extend(candidatos)
@@ -485,11 +712,37 @@ def main(argv=None):
     parser.add_argument("--manifesto", action="store_true", help="JSON completo sem textos, somente em stdout")
     parser.add_argument("--envios-teste", type=interpretar_envios,
                         help="simular IDs de envio separados por virgula; nao aprova nem congela")
+    revisao = parser.add_mutually_exclusive_group()
+    revisao.add_argument("--exportar-revisao", action="store_true", help="criar planilha local ignorada, sem sobrescrever")
+    revisao.add_argument("--importar-revisao", action="store_true", help="validar decisoes declaradas na planilha local")
     args = parser.parse_args(argv)
     try:
         celulas, fontes, snapshots = ler_entradas()
         relatorio = auditar(celulas, fontes["H"]["envios"], envios_teste=args.envios_teste)
         conferir_preservacao(snapshots)
+        if args.exportar_revisao or args.importar_revisao:
+            linhas, excluidas = preparar_revisao(celulas, snapshots, relatorio["proximidades"])
+            relatorio["revisao_humana"] = resumir_revisao(linhas)
+            relatorio["revisao_humana"]["arquivo_local"] = ARQUIVO_REVISAO
+            relatorio["revisao_humana"]["excluidas_por_motivo"] = {k: len(v) for k, v in excluidas.items()}
+            if args.exportar_revisao:
+                exportar_revisao_local(linhas)
+            else:
+                decisoes, digest = ler_revisao_local(linhas)
+                analises = marcar_colunas_conflitantes([analisar(c) for c in celulas])
+                revisadas = aplicar_revisoes(analises, decisoes)
+                relatorio["revisao_humana"].update(resumir_revisao(linhas, decisoes))
+                relatorio["revisao_humana"]["sha256_revisao"] = digest
+                relatorio["revisao_humana"]["aprovadas_distintas"] = distribuir(revisadas)
+                relatorio["revisao_humana"]["divisao_aprovada"] = False
+                relatorio["divisoes_automaticas_nao_revisadas"] = relatorio["divisoes_propostas"]
+                relatorio["divisoes_propostas"] = (
+                    propor_divisoes(revisadas, fontes["H"]["envios"], relatorio["proximidades"])
+                    if args.envios_teste is None else [avaliar_divisao(
+                        revisadas, args.envios_teste, fontes["H"]["envios"], relatorio["proximidades"])])
+                relatorio["celulas"] = [a.publico() for a in revisadas]
+                relatorio["natureza"] = "auditoria_com_decisoes_declaradas_no_csv"
+            conferir_preservacao(snapshots)
         relatorio["fontes"] = fontes
         relatorio["entradas_preservadas"] = True
         relatorio["sha256_codigo"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
@@ -499,6 +752,9 @@ def main(argv=None):
                 relatorio[chave + "_quantidade"] = len(relatorio.pop(chave))
         print(json.dumps(relatorio, ensure_ascii=False, sort_keys=True, indent=2))
         return 0
+    except ErroRevisao as exc:
+        print(json.dumps({"erro": exc.codigo, "id_resposta": exc.identificador}), file=sys.stderr)
+        return 2
     except (ErroAuditoria, OSError, UnicodeError):
         print('{"erro":"auditoria_nao_concluida_entradas_ou_layout_invalidos"}', file=sys.stderr)
         return 2

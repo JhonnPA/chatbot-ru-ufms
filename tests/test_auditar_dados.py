@@ -297,5 +297,253 @@ class PrivacidadeEPreservacao(unittest.TestCase):
         self.assertNotIn("MARCADOR_PRIVADO_FICTICIO", out.getvalue())
 
 
+def preparar_fixture_revisao(humanas=None, sinteticas=None):
+    if humanas is None:
+        h = [""] * 10
+        h[0] = "Fragmento órfico da lua violeta"
+        h[1] = "  Menu orbital, violeta\npara a estação azul  "
+        h[4] = "Recarregar cristais da nebulosa"
+        humanas = [h]
+    if sinteticas is None:
+        s = [""] * 10
+        s[1] = "Menu do planeta Ocre"
+        sinteticas = [s]
+    snapshots = {"H": csv_ficticio("H", humanas).encode(), "S": csv_ficticio("S", sinteticas).encode()}
+    celulas = []
+    for fonte, bruto in snapshots.items():
+        cs, _ = a.ler_csv(io.StringIO(bruto.decode(), newline=""), fonte)
+        celulas.extend(cs)
+    linhas, excluidas = a.preparar_revisao(celulas, snapshots, a.sinalizar_proximos(celulas))
+    return celulas, snapshots, linhas, excluidas
+
+
+def importar_fixture(linhas, esperadas):
+    fluxo = io.StringIO(newline="")
+    a.escrever_revisao_fluxo(fluxo, linhas)
+    fluxo.seek(0)
+    return a.importar_revisao_fluxo(fluxo, esperadas)
+
+
+class RevisaoHumana(unittest.TestCase):
+    def setUp(self):
+        self.cs, self.snapshots, self.esperadas, self.excluidas = preparar_fixture_revisao()
+        self.linhas = [dict(r) for r in self.esperadas]
+
+    def revisar(self, identificador, decisao, rotulo="", uso=""):
+        r = next(r for r in self.linhas if r["id_resposta"] == identificador)
+        r.update(decisao_humana=decisao, rotulo_revisado=rotulo, uso_autorizado=uso)
+
+    def aplicar(self):
+        ds = importar_fixture(self.linhas, self.esperadas)
+        return a.aplicar_revisoes([a.analisar(c) for c in self.cs], ds)
+
+    def test_exporta_texto_exato_sem_metadados_e_sem_decisoes(self):
+        fluxo = io.StringIO(newline="")
+        a.escrever_revisao_fluxo(fluxo, self.linhas)
+        self.assertNotIn("METADADO_FICTICIO", fluxo.getvalue())
+        fluxo.seek(0)
+        rows = list(csv.DictReader(fluxo))
+        r = next(r for r in rows if r["id_resposta"] == "H0001:C03")
+        self.assertEqual(r["texto_original"], "  Menu orbital, violeta\npara a estação azul  ")
+        self.assertTrue(all(r["decisao_humana"] == "pendente" and not r["rotulo_revisado"] for r in rows))
+        self.assertEqual(r["id_envio"], "H0001")
+        self.assertEqual(r["origem"], "humano")
+
+    def test_pendente_nao_herda_candidatura_automatica(self):
+        self.assertGreater(a.distribuir([a.analisar(c) for c in self.cs])["total"], 0)
+        revisadas = self.aplicar()
+        self.assertEqual(a.distribuir(revisadas)["total"], 0)
+        self.assertTrue(all(not r.publico()["aprovado"] for r in revisadas))
+
+    def test_humano_pode_aprovar_exemplo_barrado_pela_heuristica(self):
+        c = next(c for c in self.cs if c.id == "H0001:C06")
+        self.assertFalse(a.analisar(c).candidata)
+        self.revisar(c.id, "aprovar")
+        dist = a.distribuir(self.aplicar())
+        self.assertEqual(dist["por_classe"]["recarga_creditos"], 1)
+        self.assertEqual(dist["por_origem"]["humano"], 1)
+
+    def test_corrigir_exige_decisao_explicita_e_rotulo_valido(self):
+        self.revisar("H0001:C02", "corrigir", "cadastro")
+        self.assertEqual(a.distribuir(self.aplicar())["por_classe"]["cadastro"], 1)
+        self.revisar("H0001:C02", "corrigir", "")
+        with self.assertRaises(a.ErroRevisao):
+            self.aplicar()
+
+    def test_nao_aprova_rotulo_ausente_sem_correcao(self):
+        self.revisar("H0001:C02", "aprovar")
+        with self.assertRaises(a.ErroRevisao):
+            self.aplicar()
+
+    def test_rejeicao_remove_candidata(self):
+        self.revisar("H0001:C03", "rejeitar")
+        self.assertEqual(a.distribuir(self.aplicar())["total"], 0)
+
+    def test_rotulos_reservados_e_desconhecidos_sao_recusados(self):
+        for invalido in ["dominio", "esclarecer", "humano", "inventado", "cardápio"]:
+            self.revisar("H0001:C02", "corrigir", invalido)
+            with self.assertRaises(a.ErroRevisao):
+                self.aplicar()
+
+    def test_aprovar_nao_troca_rotulo_silenciosamente(self):
+        self.revisar("H0001:C03", "aprovar", "horarios")
+        with self.assertRaises(a.ErroRevisao):
+            self.aplicar()
+
+    def test_identificador_texto_origem_e_versao_sao_imutaveis(self):
+        for campo in ["id_resposta", "id_envio", "fonte_original", "origem", "coluna_original",
+                      "texto_original", "rotulo_sugerido", "motivo_sinalizacao", "sha256_fonte"]:
+            alteradas = [dict(r) for r in self.esperadas]
+            alteradas[0][campo] += "ALTERADO"
+            with self.assertRaises(a.ErroRevisao):
+                importar_fixture(alteradas, self.esperadas)
+
+    def test_nao_remove_espacos_do_original_na_importacao(self):
+        r = next(r for r in self.linhas if r["id_resposta"] == "H0001:C03")
+        r["texto_original"] = r["texto_original"].strip()
+        with self.assertRaises(a.ErroRevisao):
+            self.aplicar()
+
+    def test_nao_aceita_linhas_ausentes_ou_repetidas(self):
+        for alteradas in [self.linhas[1:], self.linhas + [self.linhas[0]]]:
+            with self.assertRaises(a.ErroRevisao):
+                importar_fixture(alteradas, self.esperadas)
+
+    def test_ordenacao_da_planilha_nao_muda_ids_ou_resultados(self):
+        self.revisar("H0001:C03", "aprovar")
+        original = a.distribuir(self.aplicar())
+        self.linhas.reverse()
+        self.assertEqual(a.distribuir(self.aplicar()), original)
+
+    def test_cabecalho_e_csv_invalidos(self):
+        for texto in ["", '"cabecalho sem fim', "texto,rotulo\nx,y\n",
+                      ",".join(a.CAMPOS_REVISAO) + '\n"sem fim']:
+            with self.assertRaises(a.ErroRevisao):
+                a.importar_revisao_fluxo(io.StringIO(texto), self.esperadas)
+
+    def test_alteracao_do_bruto_invalida_revisao(self):
+        novos = dict(self.snapshots)
+        novos["H"] = novos["H"].replace(b"METADADO_FICTICIO", b"OUTRO_METADADO_FICTICIO")
+        atualizadas, _ = a.preparar_revisao(self.cs, novos, [])
+        with self.assertRaises(a.ErroRevisao):
+            importar_fixture(self.linhas, atualizadas)
+
+    def test_origem_sintetica_nao_vira_humana(self):
+        self.revisar("S0001:C02", "aprovar")
+        dist = a.distribuir(self.aplicar())
+        self.assertEqual(dist["por_origem"], {"humano": 0, "llm": 1})
+        for uso in ["teste", "ambos"]:
+            self.revisar("S0001:C02", "aprovar", uso=uso)
+            with self.assertRaises(a.ErroRevisao):
+                self.aplicar()
+
+    def test_destinacao_por_exemplo_e_respeitada_sem_separar_envio(self):
+        self.revisar("H0001:C03", "aprovar", uso="treino")
+        plano = a.avaliar_divisao(self.aplicar(), [1], 1, [])
+        self.assertEqual(plano["teste_humano"]["total"], 0)
+        self.assertEqual(plano["humanas_treino"]["total"], 0)
+        self.assertEqual(plano["aprovadas_nao_alocadas_por_uso"], ["H0001:C03"])
+
+    def test_decisao_e_uso_invalidos_nao_sao_aceitos(self):
+        for decisao, uso in [("aprovacao_auto", ""), ("aprovar", "validacao")]:
+            self.revisar("H0001:C03", decisao, uso=uso)
+            with self.assertRaises(a.ErroRevisao):
+                self.aplicar()
+
+    def test_dados_pessoais_e_formulas_nao_sao_exportados(self):
+        h = [""] * 10
+        h[:4] = ["Contato pessoa@example.invalid", "Meu nome é Pessoa Imaginária",
+                 "=2+2", "Menu da lua anônima"]
+        cs, snapshots, linhas, excluidas = preparar_fixture_revisao([h])
+        self.assertEqual(len([r for r in linhas if r["origem"] == "humano"]), 1)
+        self.assertEqual(len(excluidas["possivel_dado_pessoal"]), 2)
+        self.assertEqual(len(excluidas["formula_de_planilha"]), 1)
+        self.assertEqual(snapshots["H"], csv_ficticio("H", [h]).encode())
+
+    def test_observacoes_nao_aparecem_no_relatorio(self):
+        self.revisar("H0001:C03", "aprovar")
+        self.linhas[1]["observacoes_revisao"] = "NOTA_FICTICIA_PRIVADA"
+        self.assertNotIn("NOTA_FICTICIA_PRIVADA", json.dumps([r.publico() for r in self.aplicar()]))
+        self.linhas[1]["observacoes_revisao"] = "pessoa@example.invalid"
+        with self.assertRaises(a.ErroRevisao):
+            self.aplicar()
+
+    def test_duplicatas_aprovadas_contam_uma_vez_e_conflitos_sao_recusados(self):
+        h1, h2 = [""] * 10, [""] * 10
+        h1[1], h2[1] = "Menu da estação turquesa", "MENU DA ESTAÇÃO TURQUESA!"
+        cs, _, linhas, _ = preparar_fixture_revisao([h1, h2])
+        originais = [dict(r) for r in linhas]
+        for r in linhas:
+            if r["origem"] == "humano":
+                r["decisao_humana"] = "aprovar"
+        ds = importar_fixture(linhas, originais)
+        revisadas = a.aplicar_revisoes([a.analisar(c) for c in cs], ds)
+        self.assertEqual(a.distribuir(revisadas)["por_origem"]["humano"], 1)
+        segunda = next(r for r in linhas if r["id_resposta"] == "H0002:C03")
+        segunda.update(decisao_humana="corrigir", rotulo_revisado="horarios")
+        with self.assertRaises(a.ErroRevisao):
+            importar_fixture(linhas, originais)
+
+    def test_arquivo_local_nao_pode_sobrescrever_revisao(self):
+        from unittest.mock import Mock
+        caminho = Mock()
+        caminho.open.side_effect = FileExistsError()
+        with patch.object(a, "caminho_revisao_local", return_value=caminho):
+            with self.assertRaises(a.ErroRevisao):
+                a.exportar_revisao_local(self.linhas)
+        caminho.open.assert_called_once_with("x", encoding="utf-8-sig", newline="")
+
+    def test_bloqueio_de_escrita_tem_erro_tecnico_sem_conteudo(self):
+        from unittest.mock import Mock
+        caminho = Mock()
+        caminho.open.side_effect = PermissionError("CONTEUDO_PRIVADO_FICTICIO")
+        with patch.object(a, "caminho_revisao_local", return_value=caminho):
+            with self.assertRaises(a.ErroRevisao) as erro:
+                a.exportar_revisao_local(self.linhas)
+        self.assertEqual(erro.exception.codigo, "nao_foi_possivel_gravar_revisao")
+        self.assertNotIn("CONTEUDO_PRIVADO_FICTICIO", str(erro.exception))
+
+    def test_revisao_exige_gitignore_e_recusa_symlink(self):
+        from types import SimpleNamespace
+        with patch.object(Path, "is_symlink", return_value=False), \
+                patch.object(a.subprocess, "run", return_value=SimpleNamespace(returncode=1)):
+            with self.assertRaises(a.ErroRevisao):
+                a.caminho_revisao_local()
+        with patch.object(Path, "is_symlink", return_value=True), patch.object(a.subprocess, "run") as git:
+            with self.assertRaises(a.ErroRevisao):
+                a.caminho_revisao_local()
+            git.assert_not_called()
+
+    def test_cli_reconta_somente_decisoes_importadas_sem_textos(self):
+        self.revisar("H0001:C06", "aprovar")
+        fluxo = io.StringIO(newline="")
+        a.escrever_revisao_fluxo(fluxo, self.linhas)
+        bruto_revisao = fluxo.getvalue().encode()
+        snapshots = self.snapshots
+
+        class Entrada:
+            def __init__(self, fonte):
+                self.fonte = fonte
+
+            def read_bytes(self):
+                return snapshots[self.fonte]
+
+        class Revisao:
+            def read_bytes(self):
+                return bruto_revisao
+
+        saida = io.StringIO()
+        with patch.object(a, "caminho_entrada", side_effect=Entrada), \
+                patch.object(a, "caminho_revisao_local", return_value=Revisao()), redirect_stdout(saida):
+            self.assertEqual(a.main(["--importar-revisao", "--manifesto", "--envios-teste", "1"]), 0)
+        r = json.loads(saida.getvalue())
+        self.assertEqual(r["revisao_humana"]["aprovadas_distintas"]["total"], 1)
+        self.assertEqual(r["divisoes_propostas"][0]["teste_humano"]["total"], 1)
+        self.assertIn("divisoes_automaticas_nao_revisadas", r)
+        for linha in self.esperadas:
+            self.assertNotIn(linha["texto_original"], saida.getvalue())
+        self.assertFalse(r["revisao_humana"]["divisao_aprovada"])
+
+
 if __name__ == "__main__":
     unittest.main()
