@@ -1,4 +1,4 @@
-# Como ter acesso ao RU com subsídio (2026)
+# Cadastro e documentos para acesso ao RU com subsídio (2026)
 
 Para utilizar o Restaurante Universitário com subsídio é necessário:
 

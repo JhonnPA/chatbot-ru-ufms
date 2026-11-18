@@ -1,8 +1,12 @@
 # Regras de uso e conduta no Restaurante Universitário da UFMS
 
-## Não há documento oficial sobre regras de conduta
+## Limite da pesquisa documental do grupo
 
-Não foi encontrado nenhum documento oficial da UFMS que trate de regras de conduta no Restaurante Universitário, como levar marmita, entrar com mochila, consumir alimentos trazidos de fora, levar comida para fora do RU ou outras normas de comportamento no refeitório. Por isso, não é possível informar se essas práticas são permitidas ou proibidas.
+Na pesquisa relatada pelo grupo em novembro de 2026, não foi localizado documento
+oficial da UFMS que esclarecesse levar marmita, entrar com mochila, consumir
+alimentos trazidos de fora, levar comida para fora do RU ou outras condutas.
+Este texto é uma elaboração do grupo e não comprova a inexistência de normas.
+Sem fonte específica, não é possível afirmar permissão ou proibição dessas práticas.
 
 ## Contato
 

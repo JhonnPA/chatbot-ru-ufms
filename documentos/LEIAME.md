@@ -1,7 +1,9 @@
 # Base de conhecimento do grupo
 
-Coloquem aqui os **documentos oficiais** do tema - é deles que o bot tira as
-respostas quando o LLM está ligado (RAG). Formatos aceitos: `.pdf`, `.md`, `.txt`,
+Coloquem aqui os **documentos do tema com proveniência explícita**: fontes oficiais,
+reorganizações de fontes oficiais e textos do grupo devem ser diferenciados em
+`FONTES.md`. É deles que o bot tira as respostas quando o LLM está ligado (RAG).
+Formatos aceitos: `.pdf`, `.md`, `.txt`,
 `.html`. Este arquivo (`LEIAME.md`) e o `FONTES.md` não entram na base.
 
 ```
@@ -20,6 +22,13 @@ documentos/
   grupo, desde que plausíveis e coerentes com as respostas do `grupo.yaml`.
 * PDF escaneado (imagem) não tem texto extraível: prefira a versão digital.
 * Depois de mudar os documentos, nada a fazer: o índice em `.vectordb/` é recriado
-  sozinho. Para testar a busca sem gastar créditos:
+  sozinho; mudanças em `FONTES.md`, configuração e código da base também invalidam
+  o cache. O catálogo não é indexado como resposta: sua proveniência acompanha
+  os trechos, sem participar da pontuação lexical. Para testar a busca sem gastar créditos:
   `python scripts/indexar_documentos.py --buscar "sua pergunta"`.
 * Veja o exemplo completo em `exemplos/biblioteca/documentos/`.
+
+O guia de composição não é um cardápio datado. Não copiar os PDFs semanais de
+`referencias/_brutos/cardapios/` como documentos permanentemente vigentes, nem
+duplicar o guia bruto que já fundamenta os resumos. Pagamento é relato do grupo;
+o texto de conduta registra uma lacuna documental e não cria permissões/proibições.
