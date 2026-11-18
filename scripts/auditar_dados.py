@@ -13,9 +13,11 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 import re
 import sys
 import subprocess
+import tempfile
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
@@ -31,7 +33,7 @@ _texto = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_texto)
 normalizar = _texto.normalizar
 
-VERSAO = "2"
+VERSAO = "3"
 INTENCOES = ("cardapio", "horarios", "valores", "recarga_creditos", "cadastro", "regras_uso")
 CLASSES = INTENCOES + ("fora_dominio", "chitchat")
 MIN_TREINO = dict.fromkeys(INTENCOES, 50) | {"fora_dominio": 150, "chitchat": 100}
@@ -77,6 +79,15 @@ EDITAVEIS_REVISAO = {"rotulo_revisado", "decisao_humana", "uso_autorizado", "obs
 DECISOES = {"", "pendente", "aprovar", "corrigir", "rejeitar"}
 USOS = {"", "treino", "teste", "ambos"}
 AUTOIDENTIFICACAO = re.compile(r"\b(me chamo|meu nome e|meu cpf|meu rga|meu telefone|meu email)\b")
+PRIVADOS = {
+    "formulario_humano.csv", "formulario_humano_novo.csv", "formulario_humano_backup_48.csv",
+    "revisao_humana.csv", "revisao_humana_backup_1711.csv", "sinteticas_llm.csv",
+    "migracao_48_67.json", "triagem_semantica_67.json", "plano_curadoria_67.json",
+    "revisao_prioritaria.csv", "revisao_humana_67_preparada.csv", "migracao_48_67_preparada.json",
+}
+CAMPOS_PRIORIDADE = ("id_resposta", "texto_original", "origem", "rotulo_sugerido",
+                     "uso_proposto", "sinalizacao", "sha256_contexto",
+                     "decisao_humana", "rotulo_corrigido")
 
 
 class ErroAuditoria(ValueError):
@@ -159,6 +170,12 @@ class AnaliseRevisada(Analise):
                          revisao_humana=("pendente" if self.decisao_humana == "pendente"
                                          else "decisao_declarada_no_csv"), aprovado=self.candidata)
         return resultado
+
+
+@dataclass(frozen=True)
+class AnalisePlanejada(Analise):
+    # Sugestão de IA continua com aprovado=False herdado de Analise.publico().
+    uso_autorizado: str = ""
 
 
 def permitida_no_uso(analise, uso):
@@ -342,6 +359,403 @@ def ler_revisao_local(linhas):
     bruto = caminho_revisao_local().read_bytes()
     fluxo = io.StringIO(bruto.decode("utf-8-sig"), newline="")
     return importar_revisao_fluxo(fluxo, linhas), hashlib.sha256(bruto).hexdigest()
+
+
+def digest(bruto):
+    return hashlib.sha256(bruto).hexdigest()
+
+
+def codificar_json(objeto):
+    return (json.dumps(objeto, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode()
+
+
+def caminho_privado(nome):
+    if nome not in PRIVADOS:
+        raise ErroRevisao("arquivo_privado_nao_autorizado")
+    p = RAIZ
+    relativo = Path("dados/_brutos") / nome
+    for parte in relativo.parts:
+        p = p / parte
+        if p.is_symlink():
+            raise ErroRevisao("arquivo_privado_simbolico")
+    r = subprocess.run(["git", "-C", str(RAIZ), "check-ignore", "-q", "--", str(relativo)],
+                       capture_output=True, check=False)
+    if r.returncode != 0:
+        raise ErroRevisao("arquivo_privado_deve_estar_ignorado")
+    return p
+
+
+def gravar_privado(nome, bruto, substituir=False):
+    """Substituição atômica de um arquivo; nunca remove backups ou exportações."""
+    p = caminho_privado(nome)
+    if not substituir:
+        with p.open("xb") as f:
+            f.write(bruto)
+        return
+    temporario = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=p.parent, prefix=".curadoria-", delete=False) as f:
+            temporario = Path(f.name)
+            f.write(bruto)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(temporario, p)
+    finally:
+        if temporario is not None and temporario.exists():
+            temporario.unlink()
+
+
+def comparar_versoes_humanas(anterior, nova):
+    """Comparação exata por registro, independente da ordem; metadados não saem."""
+    hash_nova = digest(nova)
+    tabelas = []
+    for bruto in (anterior, nova):
+        ler_csv(io.StringIO(bruto.decode("utf-8-sig"), newline=""), "H")
+        tabelas.append(list(csv.reader(io.StringIO(bruto.decode("utf-8-sig"), newline=""), strict=True)))
+    velha, nova = tabelas
+    if velha[0] != nova[0]:
+        raise ErroRevisao("cabecalhos_das_versoes_diferentes")
+    for tabela in tabelas:
+        if len({tuple(l) for l in tabela[1:]}) != len(tabela) - 1:
+            raise ErroRevisao("envios_integrais_duplicados")
+        if len({tuple(l[1:]) for l in tabela[1:]}) != len(tabela) - 1:
+            raise ErroRevisao("vinculo_de_envios_ambiguo")
+    indice = {tuple(l): i for i, l in enumerate(nova[1:], 1)}
+    faltantes = [f"H{i:04d}" for i, l in enumerate(velha[1:], 1) if tuple(l) not in indice]
+    if faltantes:
+        raise ErroRevisao("envio_anterior_alterado_ou_ausente", faltantes[0])
+    mapa = {i: indice[tuple(l)] for i, l in enumerate(velha[1:], 1)}
+    return {"envios_anteriores": len(velha) - 1, "envios_novos": len(nova) - 1,
+            "acrescentados": sorted(set(range(1, len(nova))) - set(mapa.values())),
+            "mapa_envios": mapa, "sha256_anterior": digest(anterior),
+            "sha256_nova": hash_nova, "preservacao_integral": True}
+
+
+def celulas_dos_snapshots(snapshots):
+    return [c for fonte, bruto in snapshots.items()
+            for c in ler_csv(io.StringIO(bruto.decode("utf-8-sig"), newline=""), fonte)[0]]
+
+
+def migrar_revisao(anterior, nova, sintetico, revisao_anterior):
+    comparacao = comparar_versoes_humanas(anterior, nova)
+    antes = {"H": anterior, "S": sintetico}
+    depois = {"H": nova, "S": sintetico}
+    cs_antes, cs_depois = celulas_dos_snapshots(antes), celulas_dos_snapshots(depois)
+    esperadas, _ = preparar_revisao(cs_antes, antes, sinalizar_proximos(cs_antes))
+    decisoes = importar_revisao_fluxo(io.StringIO(revisao_anterior.decode("utf-8-sig"), newline=""), esperadas)
+    antigas = list(csv.DictReader(io.StringIO(revisao_anterior.decode("utf-8-sig"), newline="")))
+    novas, excluidas = preparar_revisao(cs_depois, depois, sinalizar_proximos(cs_depois))
+    por_id = {r["id_resposta"]: r for r in novas}
+    vinculos = {}
+    for r in antigas:
+        identificador = r["id_resposta"]
+        if r["origem"] == "humano":
+            envio = int(r["id_envio"][1:])
+            novo_id = f'H{comparacao["mapa_envios"][envio]:04d}:C{int(r["coluna_original"]):02d}'
+        else:
+            novo_id = identificador
+        nova_linha = por_id.get(novo_id)
+        if (nova_linha is None or nova_linha["texto_original"] != r["texto_original"]
+                or nova_linha["origem"] != r["origem"]):
+            raise ErroRevisao("migracao_sem_vinculo_inequivoco", identificador)
+        for campo in EDITAVEIS_REVISAO:
+            nova_linha[campo] = r[campo]
+        vinculos[identificador] = novo_id
+    fluxo = io.StringIO(newline="")
+    escrever_revisao_fluxo(fluxo, novas)
+    resultado = fluxo.getvalue().encode("utf-8-sig")
+    importar_revisao_fluxo(io.StringIO(fluxo.getvalue(), newline=""), preparar_revisao(
+        cs_depois, depois, sinalizar_proximos(cs_depois))[0])
+    rastreio = {"versao": VERSAO, "comparacao": comparacao, "ids_migrados": vinculos,
+                "sha256_revisao_anterior": digest(revisao_anterior),
+                "sha256_revisao_nova": digest(resultado), "sha256_sintetico": digest(sintetico),
+                "decisoes_preservadas": dict(Counter(d["decisao"] for d in decisoes.values())),
+                "linhas_novas": len(novas), "excluidas": {k: len(v) for k, v in excluidas.items()}}
+    return resultado, rastreio
+
+
+def atualizar_base_local(aplicar=False):
+    nomes = ("formulario_humano.csv", "formulario_humano_novo.csv", "formulario_humano_backup_48.csv",
+             "revisao_humana.csv", "revisao_humana_backup_1711.csv", "sinteticas_llm.csv")
+    brutos = {n: caminho_privado(n).read_bytes() for n in nomes}
+    if brutos[nomes[0]] != brutos[nomes[2]] or brutos[nomes[3]] != brutos[nomes[4]]:
+        raise ErroRevisao("backup_desatualizado_ou_base_ja_substituida")
+    revisao, rastreio = migrar_revisao(brutos[nomes[0]], brutos[nomes[1]], brutos[nomes[5]], brutos[nomes[3]])
+    if aplicar:
+        for n, b in brutos.items():
+            if caminho_privado(n).read_bytes() != b:
+                raise ErroRevisao("arquivo_alterado_durante_migracao")
+        # Journal antes das substituições: backups íntegros permitem recuperar falha parcial.
+        gravar_privado("migracao_48_67.json", codificar_json(rastreio | {"estado": "preparada"}))
+        gravar_privado("revisao_humana.csv", revisao, substituir=True)
+        gravar_privado("formulario_humano.csv", brutos[nomes[1]], substituir=True)
+        gravar_privado("migracao_48_67.json", codificar_json(rastreio | {"estado": "concluida"}), substituir=True)
+    return {k: v for k, v in rastreio.items() if k != "ids_migrados"} | {"substituicao_executada": aplicar}
+
+
+SINAIS_SEMANTICOS = {"contexto_eliptico", "alternativas_no_mesmo_texto", "fronteira_dominio",
+                    "linguagem_ofensiva", "pressuposto_a_conferir", "multiplos_topicos_fora_dominio",
+                    "pedido_indireto", "erro_digitacao", "revisao_semantica_ia"}
+SITUACOES_SEMANTICAS = {"candidata", "ambigua", "metarresposta", "multiplas_intencoes", "fora_catalogo"}
+
+
+def validar_triagem(objeto, celulas, sha256_humano):
+    if (objeto.get("versao") != 1 or objeto.get("sha256_humano") != sha256_humano
+            or objeto.get("autoria") != "sugestao_ia_sem_aprovacao_humana"):
+        raise ErroRevisao("versao_ou_fonte_da_triagem_incompativel")
+    esperadas = {c.id: c for c in celulas if c.fonte == "H" and c.texto
+                 and not impedimentos_revisao(c.texto)}
+    itens = objeto.get("itens", {})
+    if not isinstance(itens, dict) or set(itens) != set(esperadas):
+        raise ErroRevisao("ids_da_triagem_incompativeis")
+    for identificador, item in itens.items():
+        c = esperadas[identificador]
+        if (not isinstance(item, dict) or item.get("sha256_texto") != digest(c.texto.encode())
+                or item.get("rotulo") not in (None,) + CLASSES
+                or item.get("situacao") not in SITUACOES_SEMANTICAS
+                or item.get("uso") not in {"ambos", "treino"}
+                or not isinstance(item.get("sinais"), list)
+                or any(s not in SINAIS_SEMANTICOS for s in item["sinais"])):
+            raise ErroRevisao("item_de_triagem_invalido", identificador)
+        if item["situacao"] == "candidata" and item["rotulo"] is None:
+            raise ErroRevisao("candidata_sem_rotulo", identificador)
+    return itens
+
+
+def analises_para_planejamento(analises, decisoes, triagem):
+    revisadas = {a.celula.id: a for a in aplicar_revisoes(analises, decisoes)}
+    resultado = []
+    for a in analises:
+        revisada = revisadas[a.celula.id]
+        if impedimentos_revisao(a.celula.texto):
+            resultado.append(AnalisePlanejada(a.celula, None, (), ("rotulo_inconclusivo",)))
+        elif revisada.decisao_humana != "pendente":
+            resultado.append(revisada)
+        elif a.celula.id in triagem:
+            item = triagem[a.celula.id]
+            alertas = set(item["sinais"])
+            if item["situacao"] != "candidata":
+                alertas.add("rotulo_inconclusivo")
+            resultado.append(AnalisePlanejada(a.celula, item["rotulo"], ("sugestao_semantica_ia",),
+                                             tuple(sorted(alertas)), item["uso"]))
+        else:
+            resultado.append(a)
+    return resultado
+
+
+def selecionar_distintas(analises, rotulo, limite):
+    if limite <= 0:
+        return []
+    selecionadas, vistas = [], set()
+    for a in sorted(analises, key=lambda a: (len(a.alertas), a.celula.id)):
+        if a.candidata and a.sugerido == rotulo and a.celula.normalizado not in vistas:
+            selecionadas.append(a)
+            vistas.add(a.celula.normalizado)
+            if len(selecionadas) == limite:
+                break
+    return selecionadas
+
+
+def preparar_selecao_prioritaria(analises, plano, proximos, fontes, originais):
+    envios = set(plano["envios_teste"])
+    teste = [a for a in analises if a.celula.fonte == "H" and a.celula.envio in envios
+             and permitida_no_uso(a, "teste")]
+    reserva = {a.celula.normalizado for a in teste}
+    bloqueados = set(plano["celulas_quarentena_proximidade"])
+    treino_h = [a for a in analises if a.celula.fonte == "H" and a.celula.envio not in envios
+                and permitida_no_uso(a, "treino") and a.celula.normalizado not in reserva
+                and a.celula.id not in bloqueados]
+    todas_h = {a.celula.normalizado for a in analises if a.celula.fonte == "H"}
+    treino_s = [a for a in analises if a.celula.fonte == "S" and permitida_no_uso(a, "treino")
+                and a.celula.normalizado not in todas_h and a.celula.id not in bloqueados]
+    selecionadas = []
+    for c in CLASSES:
+        selecionadas += [(a, "teste") for a in selecionar_distintas(teste, c, MIN_TESTE[c])]
+        hs = selecionar_distintas(treino_h, c, MIN_TREINO[c])
+        selecionadas += [(a, "treino") for a in hs]
+        faltam = MIN_TREINO[c] - len(hs)
+        if faltam:
+            selecionadas += [(a, "treino") for a in selecionar_distintas(treino_s, c, faltam)]
+    regras = {"versao": 1, "fontes": fontes, "envios_teste": sorted(envios),
+              "selecionadas": [{"id": a.celula.id, "rotulo": a.sugerido, "uso": uso}
+                                for a, uso in selecionadas]}
+    contexto = digest(codificar_json(regras))
+    sinais = defaultdict(set)
+    for par in proximos:
+        for identificador in par["a"] + par["b"]:
+            sinais[identificador].add("quase_duplicata" if par["quase_duplicata"] else "possivel_parafrase")
+    duplicadas = grupos_duplicados([a.celula for a in analises])
+    for grupo in duplicadas:
+        for identificador in grupo:
+            sinais[identificador].add("duplicata_normalizada")
+    linhas = [{"id_resposta": a.celula.id, "texto_original": originais[a.celula.id],
+               "origem": a.celula.origem, "rotulo_sugerido": a.sugerido, "uso_proposto": uso,
+               "sinalizacao": ";".join(sorted(set(a.alertas) | sinais[a.celula.id])),
+               "sha256_contexto": contexto, "decisao_humana": "pendente", "rotulo_corrigido": ""}
+              for a, uso in selecionadas]
+    return linhas, regras | {"sha256_contexto": contexto}
+
+
+def importar_prioritaria(fluxo, esperadas, linhas_mestre):
+    leitor = csv.DictReader(fluxo, strict=True)
+    if leitor.fieldnames != list(CAMPOS_PRIORIDADE):
+        raise ErroRevisao("cabecalho_prioritaria_invalido")
+    por_id = {r["id_resposta"]: r for r in esperadas}
+    mestre = {r["id_resposta"]: dict(r) for r in linhas_mestre}
+    vistos = set()
+    for r in leitor:
+        identificador = r.get("id_resposta")
+        if identificador not in por_id or identificador in vistos or None in r or any(v is None for v in r.values()):
+            raise ErroRevisao("linhas_prioritaria_invalidas")
+        vistos.add(identificador)
+        original = por_id[identificador]
+        if any(r[c] != original[c] for c in CAMPOS_PRIORIDADE if c not in {"decisao_humana", "rotulo_corrigido"}):
+            raise ErroRevisao("integridade_prioritaria_violada", identificador)
+        d, rotulo = r["decisao_humana"].strip() or "pendente", r["rotulo_corrigido"].strip()
+        if d not in DECISOES or (rotulo and rotulo not in CLASSES):
+            raise ErroRevisao("decisao_prioritaria_invalida", identificador)
+        if d == "pendente":
+            continue
+        if d == "aprovar" and rotulo and rotulo != original["rotulo_sugerido"]:
+            raise ErroRevisao("troca_de_rotulo_exige_corrigir", identificador)
+        if d == "corrigir" and not rotulo:
+            raise ErroRevisao("correcao_exige_rotulo", identificador)
+        m = mestre[identificador]
+        escolhido = rotulo if d == "corrigir" else original["rotulo_sugerido"]
+        atualizada = dict(m)
+        atualizada["decisao_humana"] = ("corrigir" if d == "aprovar" and escolhido != m["rotulo_sugerido"] else d)
+        atualizada["rotulo_revisado"] = escolhido if d in {"aprovar", "corrigir"} else ""
+        atualizada["uso_autorizado"] = original["uso_proposto"]
+        if m["decisao_humana"] not in {"", "pendente"} and m != atualizada:
+            raise ErroRevisao("decisao_mestre_existente_nao_sobrescrever", identificador)
+        mestre[identificador] = atualizada
+    if vistos != set(por_id):
+        raise ErroRevisao("prioritaria_com_linhas_ausentes")
+    # A validação integral (rótulos conflitantes, origem, versão) continua centralizada.
+    f = io.StringIO(newline="")
+    escrever_revisao_fluxo(f, mestre.values())
+    importar_revisao_fluxo(io.StringIO(f.getvalue(), newline=""), linhas_mestre)
+    return list(mestre.values())
+
+
+def contexto_curadoria(usar_exportacao_nova=False):
+    if not usar_exportacao_nova:
+        celulas, fontes, snapshots = ler_entradas()
+        bruto_revisao = caminho_revisao_local().read_bytes()
+        return celulas, fontes, snapshots, bruto_revisao
+    # Preflight: planeja a versão nova sem exigir sua substituição no sandbox.
+    atualizar_base_local(aplicar=False)
+    anterior = caminho_privado("formulario_humano.csv").read_bytes()
+    nova = caminho_privado("formulario_humano_novo.csv").read_bytes()
+    sintetico = caminho_privado("sinteticas_llm.csv").read_bytes()
+    revisao, _ = migrar_revisao(anterior, nova, sintetico, caminho_revisao_local().read_bytes())
+    snapshots = {"H": nova, "S": sintetico}
+    celulas = celulas_dos_snapshots(snapshots)
+    fontes = {f: {"origem": FONTES[f][1], "envios": len([c for c in celulas if c.fonte == f]) // 10,
+                   "sha256_entrada": digest(b)} for f, b in snapshots.items()}
+    return celulas, fontes, snapshots, revisao
+
+
+def conferir_contexto(snapshots, usar_exportacao_nova=False):
+    for fonte, bruto in snapshots.items():
+        nome = ("formulario_humano_novo.csv" if usar_exportacao_nova and fonte == "H"
+                else Path(FONTES[fonte][0]).name)
+        if caminho_privado(nome).read_bytes() != bruto:
+            raise ErroRevisao("fonte_alterada_durante_planejamento")
+
+
+def planejar_curadoria_local(exportar=False, usar_exportacao_nova=False):
+    celulas, fontes, snapshots, bruto_revisao = contexto_curadoria(usar_exportacao_nova)
+    proximos = sinalizar_proximos(celulas)
+    linhas, _ = preparar_revisao(celulas, snapshots, proximos)
+    decisoes = importar_revisao_fluxo(io.StringIO(bruto_revisao.decode("utf-8-sig"), newline=""), linhas)
+    sha_revisao = digest(bruto_revisao)
+    bruto_triagem = caminho_privado("triagem_semantica_67.json").read_bytes()
+    triagem = validar_triagem(json.loads(bruto_triagem), celulas, fontes["H"]["sha256_entrada"])
+    analises = analises_para_planejamento(marcar_colunas_conflitantes([analisar(c) for c in celulas]), decisoes, triagem)
+    comparacao = comparar_versoes_humanas(caminho_privado("formulario_humano_backup_48.csv").read_bytes(), snapshots["H"])
+    planos = propor_divisoes(analises, fontes["H"]["envios"], proximos,
+                            tamanhos=(29, 30, 31, 33, 35, 37, 39), largura=5, agrupar_duplicatas=False,
+                            estrato_envios=comparacao["acrescentados"])
+    if not planos:
+        raise ErroRevisao("busca_sem_plano_nao_prova_inviabilidade")
+    escolhido = min(planos, key=lambda p: (
+        not p["viavel_condicionada_a_revisao_e_complemento"], sum(p["teste_minimos"]["faltas"].values()),
+        -p["humanas_planejadas_no_alvo"], sum(p["novas_sinteticas_necessarias"].values()), len(p["envios_teste"])))
+    prioridades, regras = preparar_selecao_prioritaria(analises, escolhido, proximos, fontes, textos_originais(snapshots))
+    plano = regras | {"sha256_triagem": digest(bruto_triagem), "sha256_revisao_inicial": sha_revisao,
+                      "divisao_aprovada": False, "congelado": False,
+                      "linhas_prioridade": [{k: v for k, v in r.items() if k != "texto_original"} for r in prioridades]}
+    conferir_contexto(snapshots, usar_exportacao_nova)
+    if exportar:
+        # Não sobrescrever uma revisão prioritária ou um plano anteriores.
+        if any(caminho_privado(n).exists() for n in ("revisao_prioritaria.csv", "plano_curadoria_67.json")):
+            raise ErroRevisao("plano_ou_prioritaria_ja_existe")
+        if usar_exportacao_nova:
+            gravar_privado("revisao_humana_67_preparada.csv", bruto_revisao)
+        f = io.StringIO(newline="")
+        e = csv.DictWriter(f, fieldnames=CAMPOS_PRIORIDADE, lineterminator="\n")
+        e.writeheader()
+        e.writerows(prioridades)
+        gravar_privado("plano_curadoria_67.json", codificar_json(plano))
+        gravar_privado("revisao_prioritaria.csv", f.getvalue().encode("utf-8-sig"))
+    return {"natureza": "proposta_ia_sem_aprovacao", "candidatas_humanas": distribuir(
+                [a for a in analises if a.celula.fonte == "H"]),
+            "situacoes_semanticas": dict(Counter(i["situacao"] for i in triagem.values())),
+            "alternativas": planos, "proposta": escolhido, "linhas_prioritarias": len(prioridades),
+            "selecionadas_por_uso_e_origem": dict(Counter(r["uso_proposto"] + ":" + r["origem"] for r in prioridades)),
+            "base_ativa_substituida": not usar_exportacao_nova,
+            "divisao_aprovada": False, "congelado": False}
+
+
+def linhas_prioritarias_do_plano(plano, mestre, fontes, sha_triagem):
+    regras = {k: plano[k] for k in ("versao", "fontes", "envios_teste", "selecionadas")}
+    if (plano["versao"] != 1 or plano["fontes"] != fontes
+            or plano["sha256_contexto"] != digest(codificar_json(regras))
+            or plano["sha256_triagem"] != sha_triagem):
+        raise ErroRevisao("plano_prioritario_incompativel")
+    por_id = {r["id_resposta"]: r for r in mestre}
+    especificacoes = [{"id": r["id_resposta"], "rotulo": r["rotulo_sugerido"], "uso": r["uso_proposto"]}
+                      for r in plano["linhas_prioridade"]]
+    if especificacoes != plano["selecionadas"] or len({r["id"] for r in especificacoes}) != len(especificacoes):
+        raise ErroRevisao("especificacoes_prioritarias_incompativeis")
+    linhas = []
+    for r in plano["linhas_prioridade"]:
+        identificador = r["id_resposta"]
+        if identificador not in por_id:
+            raise ErroRevisao("id_prioritario_desconhecido")
+        original = por_id[identificador]
+        if (r["origem"] != original["origem"] or r["sha256_contexto"] != plano["sha256_contexto"]
+                or r["rotulo_sugerido"] not in CLASSES or r["uso_proposto"] not in {"treino", "teste"}
+                or (r["origem"] == "llm" and r["uso_proposto"] != "treino")):
+            raise ErroRevisao("origem_ou_uso_prioritario_invalido", identificador)
+        if original["origem"] == "humano":
+            esperado = "teste" if int(original["id_envio"][1:]) in plano["envios_teste"] else "treino"
+            if r["uso_proposto"] != esperado:
+                raise ErroRevisao("envio_humano_separado_indevidamente", identificador)
+        linhas.append(r | {"texto_original": original["texto_original"]})
+    return linhas
+
+
+def conferir_prioritaria_local(usar_exportacao_nova=False):
+    celulas, fontes, snapshots, bruto_mestre = contexto_curadoria(usar_exportacao_nova)
+    esperadas, _ = preparar_revisao(celulas, snapshots, sinalizar_proximos(celulas))
+    mestre = list(csv.DictReader(io.StringIO(bruto_mestre.decode("utf-8-sig"), newline="")))
+    importar_revisao_fluxo(io.StringIO(bruto_mestre.decode("utf-8-sig"), newline=""), esperadas)
+    plano = json.loads(caminho_privado("plano_curadoria_67.json").read_bytes())
+    linhas = linhas_prioritarias_do_plano(plano, mestre, fontes,
+              digest(caminho_privado("triagem_semantica_67.json").read_bytes()))
+    bruto = caminho_privado("revisao_prioritaria.csv").read_bytes()
+    novas = importar_prioritaria(io.StringIO(bruto.decode("utf-8-sig"), newline=""), linhas, mestre)
+    f = io.StringIO(newline="")
+    escrever_revisao_fluxo(f, novas)
+    decisoes = importar_revisao_fluxo(io.StringIO(f.getvalue(), newline=""), esperadas)
+    analises = aplicar_revisoes([analisar(c) for c in celulas], decisoes)
+    conferir_contexto(snapshots, usar_exportacao_nova)
+    return {"revisao": resumir_revisao(esperadas, decisoes), "gravacao_executada": False,
+            "divisao_aprovada": False, "sha256_prioritaria": digest(bruto),
+            "plano_somente_aprovadas": avaliar_divisao(analises, plano["envios_teste"], fontes["H"]["envios"],
+                                                      sinalizar_proximos(celulas), quarentenar_duplicatas=True)}
 
 
 def ler_csv(fluxo, fonte):
@@ -569,13 +983,17 @@ def componentes_envios(humanos, n_envios):
     return sorted(grupos.values())
 
 
-def avaliar_divisao(analises, envios_teste, n_envios, proximos):
+def avaliar_divisao(analises, envios_teste, n_envios, proximos, quarentenar_duplicatas=False):
     teste_ids = set(envios_teste)
     if not teste_ids <= set(range(1, n_envios + 1)):
         raise ErroAuditoria("envios_invalidos")
     humanos = [a for a in analises if a.celula.fonte == "H" and a.candidata]
     teste = [a for a in humanos if a.celula.envio in teste_ids and permitida_no_uso(a, "teste")]
-    treino_h = [a for a in humanos if a.celula.envio not in teste_ids and permitida_no_uso(a, "treino")]
+    reserva = {a.celula.normalizado for a in teste}
+    retirar_exatas = {a.celula.id for a in humanos if a.celula.envio not in teste_ids
+                      and a.celula.normalizado in reserva} if quarentenar_duplicatas else set()
+    treino_h = [a for a in humanos if a.celula.envio not in teste_ids and permitida_no_uso(a, "treino")
+                and a.celula.id not in retirar_exatas]
     ids_teste = {a.celula.id for a in teste}
     todos_h = {a.celula.normalizado for a in analises if a.celula.fonte == "H" and a.celula.normalizado}
     ids_treino = {a.celula.id for a in analises if a.candidata and (
@@ -612,6 +1030,7 @@ def avaliar_divisao(analises, envios_teste, n_envios, proximos):
         "minimos_treino_projetados_apos_complemento": validar_minimos(MIN_TREINO.copy(), h_planejadas),
         "teste_minimos": teste_minimos,
         "sobreposicoes_normalizadas": [list(p) for p in sobreposicoes],
+        "celulas_quarentena_duplicata_normalizada": sorted(retirar_exatas),
         "aprovadas_nao_alocadas_por_uso": sorted(a.celula.id for a in humanos
             if not permitida_no_uso(a, "teste" if a.celula.envio in teste_ids else "treino")),
         "celulas_quarentena_proximidade": sorted(retirar),
@@ -621,12 +1040,14 @@ def avaliar_divisao(analises, envios_teste, n_envios, proximos):
     }
 
 
-def propor_divisoes(analises, n_envios, proximos, tamanhos=(29, 30, 31), largura=3):
+def propor_divisoes(analises, n_envios, proximos, tamanhos=(29, 30, 31), largura=3,
+                    agrupar_duplicatas=True, estrato_envios=None):
     """Busca limitada e determinística; ausência de solução não prova inviabilidade."""
     humanos = [a for a in analises if a.celula.fonte == "H"]
-    componentes = componentes_envios(humanos, n_envios)
+    componentes = componentes_envios(humanos, n_envios) if agrupar_duplicatas else [[i] for i in range(1, n_envios + 1)]
     zeros = (0,) * len(CLASSES)
-    estados = {(0, 0): [(zeros, ())]}
+    estrato = set(estrato_envios or [])
+    estados = {(0, 0, 0): [(zeros, ())]}
     maximo = min(max(tamanhos), n_envios)
 
     def ordem(estado):
@@ -638,20 +1059,23 @@ def propor_divisoes(analises, n_envios, proximos, tamanhos=(29, 30, 31), largura
         dist = distribuir([a for a in humanos if a.celula.envio in grupo
                            and permitida_no_uso(a, "teste")])["por_classe"]
         novos = defaultdict(list)
-        for (n, social), candidatos in estados.items():
-            novos[n, social].extend(candidatos)
+        for (n, social, estratificados), candidatos in estados.items():
+            novos[n, social, estratificados].extend(candidatos)
             if n + len(grupo) <= maximo:
                 for counts, ids in candidatos:
                     vec = tuple(counts[k] + dist[c] for k, c in enumerate(CLASSES))
-                    chave = (n + len(grupo), min(vec[-1], MIN_TESTE["chitchat"] + 2))
+                    chave = (n + len(grupo), min(vec[-1], MIN_TESTE["chitchat"] + 2),
+                             estratificados + len(set(grupo) & estrato))
                     novos[chave].append((vec, tuple(sorted(ids + tuple(grupo)))))
         estados = {k: sorted(set(v), key=ordem)[:largura] for k, v in novos.items()}
     resultados = []
     for tamanho in tamanhos:
-        candidatos = [v for (n, _), vv in estados.items() if n == tamanho for v in vv]
+        alvo_estrato = (tamanho * len(estrato) + n_envios // 2) // n_envios
+        candidatos = [v for (n, _, e), vv in estados.items() if n == tamanho and e == alvo_estrato for v in vv]
         # Avaliar somente os melhores limites lexicais; não otimiza nenhum modelo.
         candidatos.sort(key=ordem)
-        planos = [avaliar_divisao(analises, ids, n_envios, proximos) for _, ids in candidatos[:12]]
+        planos = [avaliar_divisao(analises, ids, n_envios, proximos,
+                                  quarentenar_duplicatas=not agrupar_duplicatas) for _, ids in candidatos[:12]]
         if planos:
             planos.sort(key=lambda p: (
                 not p["viavel_condicionada_a_revisao_e_complemento"],
@@ -712,11 +1136,36 @@ def main(argv=None):
     parser.add_argument("--manifesto", action="store_true", help="JSON completo sem textos, somente em stdout")
     parser.add_argument("--envios-teste", type=interpretar_envios,
                         help="simular IDs de envio separados por virgula; nao aprova nem congela")
+    parser.add_argument("--usar-exportacao-nova", action="store_true",
+                        help="planejar/validar a versao nova em memoria, antes da substituicao")
     revisao = parser.add_mutually_exclusive_group()
     revisao.add_argument("--exportar-revisao", action="store_true", help="criar planilha local ignorada, sem sobrescrever")
     revisao.add_argument("--importar-revisao", action="store_true", help="validar decisoes declaradas na planilha local")
+    revisao.add_argument("--planejar-atualizacao", action="store_true", help="comparar versoes e backups sem gravar")
+    revisao.add_argument("--atualizar-base", action="store_true", help="migrar base/revisao privadas com backups verificados")
+    revisao.add_argument("--planejar-curadoria", action="store_true", help="simular divisao com sugestoes semanticas privadas")
+    revisao.add_argument("--exportar-prioritaria", action="store_true", help="criar plano e revisao reduzida sem sobrescrever")
+    revisao.add_argument("--importar-prioritaria", action="store_true", help="validar revisao reduzida e recontar, sem gravar")
     args = parser.parse_args(argv)
     try:
+        acoes = (args.planejar_atualizacao, args.atualizar_base, args.planejar_curadoria,
+                 args.exportar_prioritaria, args.importar_prioritaria)
+        if any(acoes):
+            if args.envios_teste is not None:
+                raise ErroRevisao("acao_incompativel_com_envios_explicitos")
+            if args.planejar_atualizacao or args.atualizar_base:
+                if args.usar_exportacao_nova:
+                    raise ErroRevisao("acao_incompativel_com_fonte_nova")
+                resultado = atualizar_base_local(aplicar=args.atualizar_base)
+            elif args.importar_prioritaria:
+                resultado = conferir_prioritaria_local(args.usar_exportacao_nova)
+            else:
+                resultado = planejar_curadoria_local(exportar=args.exportar_prioritaria,
+                                                      usar_exportacao_nova=args.usar_exportacao_nova)
+            print(json.dumps(resultado, ensure_ascii=False, sort_keys=True, indent=2))
+            return 0
+        if args.usar_exportacao_nova:
+            raise ErroRevisao("fonte_nova_exige_acao_de_curadoria")
         celulas, fontes, snapshots = ler_entradas()
         relatorio = auditar(celulas, fontes["H"]["envios"], envios_teste=args.envios_teste)
         conferir_preservacao(snapshots)
@@ -755,7 +1204,7 @@ def main(argv=None):
     except ErroRevisao as exc:
         print(json.dumps({"erro": exc.codigo, "id_resposta": exc.identificador}), file=sys.stderr)
         return 2
-    except (ErroAuditoria, OSError, UnicodeError):
+    except (ErroAuditoria, OSError, UnicodeError, csv.Error, json.JSONDecodeError, KeyError, TypeError):
         print('{"erro":"auditoria_nao_concluida_entradas_ou_layout_invalidos"}', file=sys.stderr)
         return 2
 

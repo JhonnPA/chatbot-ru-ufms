@@ -545,5 +545,272 @@ class RevisaoHumana(unittest.TestCase):
         self.assertFalse(r["revisao_humana"]["divisao_aprovada"])
 
 
+class AtualizacaoDeVersoes(unittest.TestCase):
+    def setUp(self):
+        self.h1, self.h2, self.h3 = [""] * 10, [""] * 10, [""] * 10
+        self.h1[1] = "  Menu orbital, violeta\ncom cristais  "
+        self.h2[1] = "Menu do satélite dourado"
+        self.h3[1] = "Menu da galáxia esmeralda"
+        self.anterior = csv_ficticio("H", [self.h1, self.h2]).encode()
+        self.nova = csv_ficticio("H", [self.h2, self.h3, self.h1]).encode()
+        self.sintetico = csv_ficticio("S", [[""] * 10]).encode()
+        snapshots = {"H": self.anterior, "S": self.sintetico}
+        cs = a.celulas_dos_snapshots(snapshots)
+        self.linhas, _ = a.preparar_revisao(cs, snapshots, [])
+
+    def revisao(self):
+        f = io.StringIO(newline="")
+        a.escrever_revisao_fluxo(f, self.linhas)
+        return f.getvalue().encode("utf-8-sig")
+
+    def test_comparacao_independe_da_ordem_e_preserva_celulas(self):
+        r = a.comparar_versoes_humanas(self.anterior, self.nova)
+        self.assertEqual(r["mapa_envios"], {1: 3, 2: 1})
+        self.assertEqual(r["acrescentados"], [2])
+        self.assertTrue(r["preservacao_integral"])
+        self.assertEqual(r["sha256_nova"], a.digest(self.nova))
+        self.assertNotIn("METADADO_FICTICIO", json.dumps(r))
+        self.assertNotIn(self.h1[1], json.dumps(r))
+
+    def test_ausencia_alteracao_e_espacos_nao_sao_mascarados(self):
+        for nova in [csv_ficticio("H", [self.h1]).encode(),
+                     self.nova.replace(b"gal", b"gAl").replace(b"cristais", b"CRISTAIS"),
+                     self.nova.replace(b"  Menu orbital", b"Menu orbital")]:
+            with self.assertRaises(a.ErroRevisao):
+                a.comparar_versoes_humanas(self.anterior, nova)
+
+    def test_metadado_alterado_interrompe_sem_expo_lo(self):
+        alterada = self.nova.replace(b"METADADO_FICTICIO_NAO_PUBLICAR", b"OUTRO_METADADO", 1)
+        with self.assertRaises(a.ErroRevisao) as erro:
+            a.comparar_versoes_humanas(self.anterior, alterada)
+        self.assertNotIn("METADADO", str(erro.exception))
+
+    def test_duplicacao_de_envio_invalida_vinculo(self):
+        duplicada = csv_ficticio("H", [self.h1, self.h2, self.h1]).encode()
+        with self.assertRaises(a.ErroRevisao):
+            a.comparar_versoes_humanas(self.anterior, duplicada)
+        duplicada = duplicada.replace(b"METADADO_FICTICIO_NAO_PUBLICAR", b"META_DIFERENTE", 1)
+        with self.assertRaises(a.ErroRevisao):
+            a.comparar_versoes_humanas(self.anterior, duplicada)
+
+    def test_migracao_preserva_decisoes_notas_textos_e_origem(self):
+        self.linhas[0].update(decisao_humana="corrigir", rotulo_revisado="cadastro",
+                              uso_autorizado="treino", observacoes_revisao="JUSTIFICATIVA_FICTICIA")
+        self.linhas[1].update(decisao_humana="rejeitar")
+        anterior, nova, sintetico = self.anterior, self.nova, self.sintetico
+        revisao, r = a.migrar_revisao(anterior, nova, sintetico, self.revisao())
+        linhas = {x["id_resposta"]: x for x in csv.DictReader(io.StringIO(revisao.decode("utf-8-sig"), newline=""))}
+        m = linhas["H0003:C03"]
+        self.assertEqual(m["decisao_humana"], "corrigir")
+        self.assertEqual(m["rotulo_revisado"], "cadastro")
+        self.assertEqual(m["observacoes_revisao"], "JUSTIFICATIVA_FICTICIA")
+        self.assertEqual(m["texto_original"], self.h1[1])
+        self.assertEqual(m["origem"], "humano")
+        self.assertEqual(linhas["H0001:C03"]["decisao_humana"], "rejeitar")
+        self.assertEqual(linhas["H0002:C03"]["decisao_humana"], "pendente")
+        self.assertEqual(r["ids_migrados"]["H0001:C03"], "H0003:C03")
+        self.assertEqual((self.anterior, self.nova, self.sintetico), (anterior, nova, sintetico))
+
+    def test_migracao_sem_decisoes_nao_inventa_aprovacao(self):
+        revisao, r = a.migrar_revisao(self.anterior, self.nova, self.sintetico, self.revisao())
+        ls = list(csv.DictReader(io.StringIO(revisao.decode("utf-8-sig"))))
+        self.assertTrue(all(x["decisao_humana"] == "pendente" for x in ls))
+        self.assertEqual(r["decisoes_preservadas"], {"pendente": 2})
+
+    def test_revisao_de_outra_versao_e_recusada(self):
+        self.linhas[0]["sha256_fonte"] = "versao_incorreta"
+        with self.assertRaises(a.ErroRevisao):
+            a.migrar_revisao(self.anterior, self.nova, self.sintetico, self.revisao())
+
+    def test_backup_divergente_impede_qualquer_escrita(self):
+        from unittest.mock import Mock
+        caminhos = {}
+        for nome in ("formulario_humano.csv", "formulario_humano_novo.csv", "formulario_humano_backup_48.csv",
+                     "revisao_humana.csv", "revisao_humana_backup_1711.csv", "sinteticas_llm.csv"):
+            caminhos[nome] = Mock()
+            caminhos[nome].read_bytes.return_value = b"a"
+        caminhos["formulario_humano_backup_48.csv"].read_bytes.return_value = b"b"
+        with patch.object(a, "caminho_privado", side_effect=caminhos.__getitem__), patch.object(a, "gravar_privado") as gravar:
+            with self.assertRaises(a.ErroRevisao):
+                a.atualizar_base_local(aplicar=True)
+            gravar.assert_not_called()
+
+    def test_arquivo_nao_autorizado_recusado_sem_leitura(self):
+        with patch.object(Path, "read_bytes") as ler:
+            with self.assertRaises(a.ErroRevisao):
+                a.caminho_privado("arquivo_desconhecido.csv")
+            ler.assert_not_called()
+
+    def test_migracao_preserva_aprovacao_sintetica_sem_mudar_origem(self):
+        s = [""] * 10
+        s[1] = "Menu da constelação Rubi"
+        sintetico = csv_ficticio("S", [s]).encode()
+        snapshots = {"H": self.anterior, "S": sintetico}
+        cs = a.celulas_dos_snapshots(snapshots)
+        self.linhas, _ = a.preparar_revisao(cs, snapshots, [])
+        r = next(r for r in self.linhas if r["origem"] == "llm")
+        r.update(decisao_humana="aprovar", uso_autorizado="treino")
+        revisao, _ = a.migrar_revisao(self.anterior, self.nova, sintetico, self.revisao())
+        nova = next(r for r in csv.DictReader(io.StringIO(revisao.decode("utf-8-sig"))) if r["origem"] == "llm")
+        self.assertEqual(nova["id_resposta"], "S0001:C02")
+        self.assertEqual(nova["decisao_humana"], "aprovar")
+        self.assertEqual(nova["uso_autorizado"], "treino")
+
+    def test_substituicao_usa_bytes_integros_e_nao_grava_backups(self):
+        from unittest.mock import Mock
+        nova = self.nova.rstrip(b"\r\n")
+        entradas = {"formulario_humano.csv": self.anterior, "formulario_humano_novo.csv": nova,
+                    "formulario_humano_backup_48.csv": self.anterior, "revisao_humana.csv": self.revisao(),
+                    "revisao_humana_backup_1711.csv": self.revisao(), "sinteticas_llm.csv": self.sintetico}
+        caminhos = {n: Mock() for n in entradas}
+        for n, p in caminhos.items():
+            p.read_bytes.return_value = entradas[n]
+        with patch.object(a, "caminho_privado", side_effect=caminhos.__getitem__), patch.object(a, "gravar_privado") as gravar:
+            resultado = a.atualizar_base_local(aplicar=True)
+        self.assertTrue(resultado["substituicao_executada"])
+        chamadas = gravar.call_args_list
+        self.assertEqual([c.args[0] for c in chamadas], ["migracao_48_67.json", "revisao_humana.csv",
+                                                        "formulario_humano.csv", "migracao_48_67.json"])
+        self.assertEqual(chamadas[2].args[1], nova)
+        self.assertFalse(chamadas[2].args[1].endswith(b"\n"))
+
+    def test_falha_antes_do_journal_nao_tenta_substituicoes(self):
+        from unittest.mock import Mock
+        entradas = {"formulario_humano.csv": self.anterior, "formulario_humano_novo.csv": self.nova,
+                    "formulario_humano_backup_48.csv": self.anterior, "revisao_humana.csv": self.revisao(),
+                    "revisao_humana_backup_1711.csv": self.revisao(), "sinteticas_llm.csv": self.sintetico}
+        caminhos = {n: Mock() for n in entradas}
+        for n, p in caminhos.items():
+            p.read_bytes.return_value = entradas[n]
+        with patch.object(a, "caminho_privado", side_effect=caminhos.__getitem__), \
+                patch.object(a, "gravar_privado", side_effect=PermissionError()) as gravar:
+            with self.assertRaises(PermissionError):
+                a.atualizar_base_local(aplicar=True)
+            self.assertEqual(gravar.call_count, 1)
+            self.assertEqual(gravar.call_args.args[0], "migracao_48_67.json")
+
+
+class TriagemEPrioridade(unittest.TestCase):
+    def setUp(self):
+        self.cs, self.snapshots, self.mestre, _ = preparar_fixture_revisao()
+        self.triagem = {"versao": 1, "sha256_humano": a.digest(self.snapshots["H"]),
+                        "autoria": "sugestao_ia_sem_aprovacao_humana", "itens": {}}
+        for c in self.cs:
+            if c.fonte == "H" and c.texto:
+                self.triagem["itens"][c.id] = {"sha256_texto": a.digest(c.texto.encode()),
+                    "rotulo": "cardapio", "situacao": "candidata", "sinais": ["revisao_semantica_ia"], "uso": "ambos"}
+
+    def selecionadas(self):
+        itens = a.validar_triagem(self.triagem, self.cs, a.digest(self.snapshots["H"]))
+        analises = a.analises_para_planejamento([a.analisar(c) for c in self.cs], {}, itens)
+        plano = a.avaliar_divisao(analises, [1], 1, [], quarentenar_duplicatas=True)
+        return a.preparar_selecao_prioritaria(analises, plano, [], {}, a.textos_originais(self.snapshots))
+
+    def importar(self, linhas, esperadas):
+        f = io.StringIO(newline="")
+        w = csv.DictWriter(f, fieldnames=a.CAMPOS_PRIORIDADE)
+        w.writeheader()
+        w.writerows(linhas)
+        f.seek(0)
+        return a.importar_prioritaria(f, esperadas, self.mestre)
+
+    def test_triagem_semantica_nao_e_aprovacao_humana(self):
+        itens = a.validar_triagem(self.triagem, self.cs, a.digest(self.snapshots["H"]))
+        rs = a.analises_para_planejamento([a.analisar(c) for c in self.cs], {}, itens)
+        self.assertGreater(a.distribuir(rs)["total"], 0)
+        self.assertTrue(all(not r.publico()["aprovado"] for r in rs))
+
+    def test_versao_origem_texto_e_ids_da_triagem_validados(self):
+        import copy
+        for campo, valor in [("versao", 2), ("sha256_humano", "outro"), ("autoria", "humano")]:
+            objeto = copy.deepcopy(self.triagem)
+            objeto[campo] = valor
+            with self.assertRaises(a.ErroRevisao):
+                a.validar_triagem(objeto, self.cs, a.digest(self.snapshots["H"]))
+        for campo, valor in [("sha256_texto", "outro"), ("rotulo", "esclarecer"), ("sinais", ["TEXTO_PRIVADO_FICTICIO"])]:
+            objeto = copy.deepcopy(self.triagem)
+            objeto["itens"]["H0001:C02"][campo] = valor
+            with self.assertRaises(a.ErroRevisao):
+                a.validar_triagem(objeto, self.cs, a.digest(self.snapshots["H"]))
+
+    def test_rejeicao_humana_prevalece_sobre_sugestao(self):
+        ds = {"H0001:C02": {"decisao": "rejeitar", "rotulo": "", "uso": ""}}
+        rs = a.analises_para_planejamento([a.analisar(c) for c in self.cs], ds, self.triagem["itens"])
+        self.assertFalse(next(r for r in rs if r.celula.id == "H0001:C02").candidata)
+
+    def test_privacidade_e_formulas_sao_bloqueadas_tambem_na_prioritaria(self):
+        c = celula("=Menu orbital ficticio", fonte="S")
+        rs = a.analises_para_planejamento([a.analisar(c)], {}, {})
+        self.assertEqual(a.distribuir(rs)["total"], 0)
+        self.assertFalse(rs[0].publico()["aprovado"])
+
+    def test_elipse_restrita_ao_treino_nao_vai_ao_teste(self):
+        self.triagem["itens"]["H0001:C02"]["uso"] = "treino"
+        linhas, _ = self.selecionadas()
+        self.assertNotIn("H0001:C02", {r["id_resposta"] for r in linhas})
+
+    def test_prioritaria_preserva_original_e_sinteticas_so_no_treino(self):
+        linhas, _ = self.selecionadas()
+        m = next(r for r in linhas if r["id_resposta"] == "H0001:C03")
+        self.assertEqual(m["texto_original"], "  Menu orbital, violeta\npara a estação azul  ")
+        self.assertTrue(all(r["origem"] == "humano" for r in linhas if r["uso_proposto"] == "teste"))
+        self.assertTrue(all(r["decisao_humana"] == "pendente" for r in linhas))
+
+    def test_importacao_parcial_nao_exige_revisar_toda_base(self):
+        esperadas, _ = self.selecionadas()
+        linhas = [dict(r) for r in esperadas]
+        linhas[0]["decisao_humana"] = "aprovar"
+        novas = self.importar(linhas, esperadas)
+        ds = importar_fixture(novas, self.mestre)
+        self.assertEqual(sum(d["decisao"] in {"aprovar", "corrigir"} for d in ds.values()), 1)
+        # A sugestão semântica difere da sugestão lexical: aprovação explícita vira correção rastreada.
+        self.assertEqual(ds["H0001:C02"]["decisao"], "corrigir")
+
+    def test_pendente_na_prioritaria_nao_promove_ia(self):
+        ls, _ = self.selecionadas()
+        novas = self.importar(ls, ls)
+        self.assertTrue(all(r["decisao_humana"] == "pendente" for r in novas))
+
+    def test_prioritaria_rejeita_alteracao_de_texto_uso_origem_ou_hash(self):
+        esperadas, _ = self.selecionadas()
+        for campo in ["texto_original", "origem", "uso_proposto", "rotulo_sugerido", "sha256_contexto"]:
+            linhas = [dict(r) for r in esperadas]
+            linhas[0][campo] += "ALTERADO"
+            with self.assertRaises(a.ErroRevisao):
+                self.importar(linhas, esperadas)
+
+    def test_correcao_e_rejeicao_explicitas_na_prioritaria(self):
+        esperadas, _ = self.selecionadas()
+        linhas = [dict(r) for r in esperadas]
+        linhas[0].update(decisao_humana="corrigir", rotulo_corrigido="cadastro")
+        linhas[1].update(decisao_humana="rejeitar")
+        novas = self.importar(linhas, esperadas)
+        ds = importar_fixture(novas, self.mestre)
+        self.assertEqual(ds[linhas[0]["id_resposta"]]["rotulo"], "cadastro")
+        self.assertEqual(ds[linhas[1]["id_resposta"]]["decisao"], "rejeitar")
+
+    def test_quarentena_de_duplicata_nao_transfere_envio(self):
+        rs = [a.analisar(celula("Menu astral violeta", envio=i)) for i in [1, 2]]
+        plano = a.avaliar_divisao(rs, [1], 2, [], quarentenar_duplicatas=True)
+        self.assertEqual(plano["sobreposicoes_normalizadas"], [])
+        self.assertEqual(plano["humanas_treino"]["total"], 0)
+        self.assertEqual(plano["celulas_quarentena_duplicata_normalizada"], ["H0002:C03"])
+        self.assertEqual(plano["envios_treino"], [2])
+
+    def test_busca_estratifica_coleta_anterior_e_adicoes(self):
+        rs = [a.analisar(celula(f"Menu lunar violeta {i}", envio=i)) for i in range(1, 7)]
+        planos = a.propor_divisoes(rs, 6, [], tamanhos=(3,), agrupar_duplicatas=False, estrato_envios=[5, 6])
+        self.assertEqual(len(planos), 1)
+        self.assertEqual(len(set(planos[0]["envios_teste"]) & {5, 6}), 1)
+
+    def test_especificacao_de_plano_nao_pode_divergir_das_linhas(self):
+        linhas, regras = self.selecionadas()
+        plano = regras | {"sha256_triagem": "SHA_FICTICIO", "linhas_prioridade": linhas}
+        self.assertEqual(len(a.linhas_prioritarias_do_plano(plano, self.mestre, {}, "SHA_FICTICIO")), len(linhas))
+        linhas[0]["rotulo_sugerido"] = "horarios"
+        with self.assertRaises(a.ErroRevisao):
+            a.linhas_prioritarias_do_plano(plano, self.mestre, {}, "SHA_FICTICIO")
+
+
 if __name__ == "__main__":
     unittest.main()
