@@ -33,7 +33,7 @@ _texto = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_texto)
 normalizar = _texto.normalizar
 
-VERSAO = "4"
+VERSAO = "5"
 INTENCOES = ("cardapio", "horarios", "valores", "recarga_creditos", "cadastro", "regras_uso")
 CLASSES = INTENCOES + ("fora_dominio", "chitchat")
 MIN_TREINO = dict.fromkeys(INTENCOES, 50) | {"fora_dominio": 150, "chitchat": 100}
@@ -86,7 +86,16 @@ PRIVADOS = {
     "revisao_prioritaria.csv", "revisao_humana_67_preparada.csv", "migracao_48_67_preparada.json",
     "revisao_prioritaria_backup_07a.csv", "revisao_humana_backup_07a.csv",
     "plano_curadoria_67_backup_07a.json", "auditoria_delegada_07a.json",
+    "ratificacao_07b.json", "manifesto_conjuntos_07b.json", "treino_parcial_07b.csv",
+    "candidatas_sinteticas_07b.csv", "busca_sinteticas_07b.json",
+    "pacote_treinamento_07b/treino_autorizado.csv", "pacote_treinamento_07b/INSTRUCOES.md",
 }
+DEFINICOES = {"cardapio": "cardápio do dia ou da semana",
+    "horarios": "horários de funcionamento", "valores": "preços das refeições e isenções",
+    "recarga_creditos": "recarga de créditos e formas de pagamento", "cadastro": "cadastro e acesso ao RU",
+    "regras_uso": "regras de uso do RU", "chitchat": "saudações, agradecimentos, despedidas e interação social",
+    "fora_dominio": "pedidos de outros assuntos ou serviços, sem solicitação sobre o RU"}
+CAMPOS_OFICIAIS = ("texto", "intencao", "origem")
 ORIGEM_DELEGADA = "ia_sob_autorizacao_expressa"
 MARCADOR_DELEGADA = "origem_decisao=ia_delegada;autorizacao=missao_07a;"
 CAMPOS_PRIORIDADE = ("id_resposta", "texto_original", "origem", "rotulo_sugerido",
@@ -879,6 +888,139 @@ def conferir_prioritaria_local(usar_exportacao_nova=False, delegada=False, aplic
     return resultado
 
 
+def serializar_oficial(registros):
+    f = io.StringIO(newline="")
+    w = csv.DictWriter(f, fieldnames=CAMPOS_OFICIAIS, extrasaction="ignore", lineterminator="\n")
+    w.writeheader()
+    w.writerows(registros)
+    return f.getvalue().encode("utf-8")
+
+
+def selecionar_ratificadas(prioritaria, originais):
+    """Somente aprovar/corrigir do snapshot ratificado, preservando valores originais."""
+    mestre = {r["id_resposta"]: r for r in originais}
+    treino, teste, vistos = [], [], set()
+    for r in prioritaria:
+        identificador = r["id_resposta"]
+        if identificador in vistos or identificador not in mestre:
+            raise ErroRevisao("id_ratificado_invalido")
+        vistos.add(identificador)
+        m = mestre[identificador]
+        if r["texto_original"] != m["texto_original"] or r["origem"] != m["origem"]:
+            raise ErroRevisao("original_ratificado_alterado", identificador)
+        if r["decisao_humana"] not in {"aprovar", "corrigir"}:
+            continue
+        rotulo = r["rotulo_corrigido"] if r["decisao_humana"] == "corrigir" else r["rotulo_sugerido"]
+        if rotulo not in CLASSES or r["uso_proposto"] not in {"treino", "teste"}:
+            raise ErroRevisao("rotulo_ou_destino_ratificado_invalido", identificador)
+        item = {"id_resposta": identificador, "texto": m["texto_original"], "intencao": rotulo, "origem": m["origem"]}
+        (teste if r["uso_proposto"] == "teste" else treino).append(item)
+    return treino, teste
+
+
+def verificar_selecao_oficial(treino, teste):
+    conjuntos = {}
+    for tipo, linhas in (("treino", treino), ("teste", teste)):
+        contagens, humanas, normas = Counter(), 0, set()
+        for r in linhas:
+            if r["intencao"] not in CLASSES or r["origem"] not in {"humano", "coletado", "llm"}:
+                raise ErroRevisao("classe_ou_origem_oficial_invalida")
+            if tipo == "teste" and r["origem"] != "humano":
+                raise ErroRevisao("teste_ratificado_deve_ser_humano")
+            n = normalizar(r["texto"])
+            if not n or n in normas:
+                raise ErroRevisao("vazia_ou_duplicata_no_conjunto_oficial")
+            normas.add(n)
+            contagens[r["intencao"]] += 1
+            humanas += r["origem"] in {"humano", "coletado"}
+        conjuntos[tipo] = {"normas": normas, "contagens": {c: contagens[c] for c in CLASSES}, "humanas": humanas}
+    if conjuntos["treino"]["normas"] & conjuntos["teste"]["normas"]:
+        raise ErroRevisao("vazamento_no_conjunto_oficial")
+    t, h = conjuntos["teste"], conjuntos["treino"]
+    validacao_teste = validar_minimos(t["contagens"], t["humanas"], "teste")
+    if t["contagens"] != MIN_TESTE or not validacao_teste["minimos_atendidos"]:
+        raise ErroRevisao("teste_nao_atende_composicao_exata")
+    return {"teste": validacao_teste | {"por_classe": t["contagens"]},
+            "treino": validar_minimos(h["contagens"], h["humanas"]) | {"por_classe": h["contagens"]}}
+
+
+def pacote_somente_treinamento(treino, faltas):
+    descricao = "\n".join(f"- {c}: {d}." for c, d in DEFINICOES.items())
+    quotas = "\n".join(f"- {c}: {faltas[c]}." for c in CLASSES)
+    texto = ("# Pacote exclusivo de treinamento — RANGOT\n\n"
+        "Contém somente exemplos de treinamento autorizados e definições públicas de intenções.\n"
+        "Não copie outros arquivos do repositório para o ambiente gerador.\n\n"
+        "## Intenções\n\n" + descricao + "\n\n## Quantidades ainda sem exemplos autorizados\n\n" + quotas +
+        "\n\nAntes de gerar, conferir a seleção suplementar da base existente com o responsável e atualizar as quantidades.\n"
+        "Este pacote não autoriza execução de API ou geração nesta missão.\n\n"
+        "## Instruções para a futura geração em ambiente isolado\n\n"
+        "Use somente treino_autorizado.csv como exemplos; não busque outros arquivos do projeto.\n"
+        "Gere perguntas de usuários, nunca respostas factuais inventadas sobre serviços do RU.\n"
+        "Todo texto gerado recebe origem=llm. Preserve os oito rótulos, sem usar dominio ou esclarecer.\n"
+        "Varie construções, objetivos, extensões, registro formal/informal, elipses reconhecíveis e erros de digitação.\n"
+        "Não infle o volume trocando apenas saudação, pontuação, grafia ou partículas de um template.\n"
+        "Para fora_dominio, varie serviços UFMS: secretaria, assistência, estágio, TI, calendário e mobilidade;\n"
+        "combine negativos fáceis e difíceis com palavras compartilhadas com o RU.\n"
+        "Não invente dados pessoais nem regras, valores ou funcionamento institucional.\n"
+        "Registre ferramenta/modelo e prompts reais; submeta cada candidata à revisão e deduplicação antes de usar.\n")
+    return {"pacote_treinamento_07b/INSTRUCOES.md": texto.encode(),
+            "pacote_treinamento_07b/treino_autorizado.csv": serializar_oficial(treino)}
+
+
+def montar_conjuntos_07b():
+    # Reusar a validação já implementada; não repetir a análise semântica ratificada.
+    conferido = conferir_prioritaria_local(delegada=True)
+    if not conferido["curadoria_delegada"]["mestre_persistido"]:
+        raise ErroRevisao("curadoria_ratificada_nao_persistida")
+    ratificacao = json.loads(caminho_privado("ratificacao_07b.json").read_bytes())
+    fontes = {n: caminho_privado(n).read_bytes() for n in ("revisao_prioritaria.csv", "revisao_humana.csv",
+              "plano_curadoria_67.json", "auditoria_delegada_07a.json")}
+    if (ratificacao.get("versao") != 1 or ratificacao.get("referencia") != "missao_07b"
+            or ratificacao.get("leitura_integral_confirmada") is not True
+            or ratificacao.get("pendencias_nao_aprovadas") is not True
+            or ratificacao.get("sha256_arquivos") != {n: digest(b) for n, b in fontes.items()}):
+        raise ErroRevisao("ratificacao_07b_incompativel")
+    leitor = lambda b: list(csv.DictReader(io.StringIO(b.decode("utf-8-sig"), newline="")))
+    linhas, mestre = leitor(fontes["revisao_prioritaria.csv"]), leitor(fontes["revisao_humana.csv"])
+    if Counter(r["decisao_humana"] for r in linhas) != Counter(ratificacao["decisoes_ratificadas"]):
+        raise ErroRevisao("decisoes_divergem_da_ratificacao")
+    treino, teste = selecionar_ratificadas(linhas, mestre)
+    resultado = verificar_selecao_oficial(treino, teste)
+    p = conferido["plano_somente_aprovadas"]
+    if p["sobreposicoes_normalizadas"] or p["celulas_quarentena_proximidade"] or p["sinais_parafrase_a_revisar"]:
+        raise ErroRevisao("proximidade_problematicas_antes_congelamento")
+    bteste, btreino = serializar_oficial(teste), serializar_oficial(treino)
+    manifesto = {"versao": 1, "referencia": "missao_07b", "congelado": True,
+        "rotulos_ratificados_pelo_responsavel": True,
+        "origens_teste": dict(Counter(r["origem"] for r in teste)),
+        "sha256_teste": digest(bteste), "sha256_treino_parcial": digest(btreino),
+        "sha256_ratificacao": digest(caminho_privado("ratificacao_07b.json").read_bytes()),
+        "composicao": resultado, "ids_teste": [r["id_resposta"] for r in teste],
+        "ids_treino_autorizado": [r["id_resposta"] for r in treino],
+        "treino_oficial_completo": resultado["treino"]["minimos_atendidos"],
+        "textos_originais_preservados": True, "sobreposicoes_normalizadas": 0}
+    arquivos = {"dados/teste.csv": bteste,
+        "dados/_brutos/treino_parcial_07b.csv": btreino,
+        "dados/_brutos/manifesto_conjuntos_07b.json": codificar_json(manifesto)}
+    arquivos.update({"dados/_brutos/" + n: b for n, b in pacote_somente_treinamento(treino, resultado["treino"]["faltas"]).items()})
+    if resultado["treino"]["minimos_atendidos"]:
+        arquivos["dados/treino.csv"] = btreino
+    return arquivos, manifesto
+
+
+def conferir_conjuntos_07b():
+    arquivos, manifesto = montar_conjuntos_07b()
+    for nome, esperado in arquivos.items():
+        p = RAIZ
+        for parte in Path(nome).parts:
+            p = p / parte
+            if p.is_symlink():
+                raise ErroRevisao("artefato_oficial_simbolico")
+        if p.read_bytes() != esperado:
+            raise ErroRevisao("artefato_diverge_do_congelamento")
+    return {k: v for k, v in manifesto.items() if not k.startswith("ids_")}
+
+
 def ler_csv(fluxo, fonte):
     """Posições 1-based no CSV original; envio é registro lógico, não linha física."""
     if fonte not in FONTES:
@@ -1269,14 +1411,20 @@ def main(argv=None):
     revisao.add_argument("--importar-prioritaria", action="store_true", help="validar revisao reduzida e recontar, sem gravar")
     revisao.add_argument("--importar-delegada", action="store_true", help="validar ledger e decisoes delegadas sem gravar")
     revisao.add_argument("--aplicar-delegada", action="store_true", help="validar delegacao e persistir mestre com proveniencia")
+    revisao.add_argument("--conferir-conjuntos", action="store_true", help="conferir hashes e composicao dos artefatos ratificados")
     args = parser.parse_args(argv)
     try:
         acoes = (args.planejar_atualizacao, args.atualizar_base, args.planejar_curadoria,
-                 args.exportar_prioritaria, args.importar_prioritaria, args.importar_delegada, args.aplicar_delegada)
+                 args.exportar_prioritaria, args.importar_prioritaria, args.importar_delegada, args.aplicar_delegada,
+                 args.conferir_conjuntos)
         if any(acoes):
             if args.envios_teste is not None:
                 raise ErroRevisao("acao_incompativel_com_envios_explicitos")
-            if args.planejar_atualizacao or args.atualizar_base:
+            if args.conferir_conjuntos:
+                if args.usar_exportacao_nova:
+                    raise ErroRevisao("congelamento_exige_fontes_ativas")
+                resultado = conferir_conjuntos_07b()
+            elif args.planejar_atualizacao or args.atualizar_base:
                 if args.usar_exportacao_nova:
                     raise ErroRevisao("acao_incompativel_com_fonte_nova")
                 resultado = atualizar_base_local(aplicar=args.atualizar_base)

@@ -968,5 +968,80 @@ class ProvenienciaDelegada(unittest.TestCase):
         self.assertEqual(primeira, segunda)
 
 
+class ConjuntosRatificados(unittest.TestCase):
+    """CSV e congelamento com dados técnicos fictícios, sem respostas do projeto."""
+
+    def setUp(self):
+        self.teste = [{"id_resposta": f"H{i + 1:04d}:C03", "texto": f"EXEMPLO FICTICIO celeste {c} teste {j}",
+                       "intencao": c, "origem": "humano"}
+                      for i, (c, j) in enumerate((c, j) for c in a.CLASSES for j in range(a.MIN_TESTE[c]))]
+        self.treino = [{"id_resposta": "H9998:C03", "texto": "EXEMPLO FICTICIO orbital exclusivo treino",
+                        "intencao": "cardapio", "origem": "humano"},
+                       {"id_resposta": "S9999:C03", "texto": "EXEMPLO FICTICIO lunar exclusivo treino",
+                        "intencao": "cardapio", "origem": "llm"}]
+
+    def test_csv_oficial_preserva_espacos_virgula_acentos_e_quebra(self):
+        r = dict(self.treino[0], texto="  EXEMPLO FICTÍCIO, orbital\ncom cristais  ")
+        b = a.serializar_oficial([r])
+        leitor = csv.DictReader(io.StringIO(b.decode(), newline=""))
+        self.assertEqual(leitor.fieldnames, ["texto", "intencao", "origem"])
+        self.assertEqual(next(leitor)["texto"], r["texto"])
+        self.assertNotIn("id_resposta", b.decode())
+
+    def test_teste_exato_e_treino_parcial_sao_distintos(self):
+        v = a.verificar_selecao_oficial(self.treino, self.teste)
+        self.assertEqual(v["teste"]["total"], 160)
+        self.assertTrue(v["teste"]["minimos_atendidos"])
+        self.assertFalse(v["treino"]["minimos_atendidos"])
+        self.assertEqual(v["treino"]["proporcao_humana"], .5)
+
+    def test_teste_nao_pode_conter_sintetica_ou_perder_quota(self):
+        self.teste[0]["origem"] = "llm"
+        with self.assertRaises(a.ErroRevisao):
+            a.verificar_selecao_oficial(self.treino, self.teste)
+        self.teste[0]["origem"] = "humano"
+        with self.assertRaises(a.ErroRevisao):
+            a.verificar_selecao_oficial(self.treino, self.teste[1:])
+
+    def test_vazamento_e_duplicata_normalizada_impedem_congelar(self):
+        for modo in ("vazamento", "duplicata"):
+            teste = [dict(r) for r in self.teste]
+            teste[0]["texto"] = (self.treino[0]["texto"] if modo == "vazamento" else teste[1]["texto"]) + "!!!"
+            with self.assertRaises(a.ErroRevisao):
+                a.verificar_selecao_oficial(self.treino, teste)
+
+    def test_pendentes_e_rejeitadas_nao_sao_promovidas(self):
+        linhas, originais = [], []
+        for i, d in enumerate(("aprovar", "corrigir", "rejeitar", "pendente")):
+            r = {"id_resposta": f"H{i+1:04d}:C03", "texto_original": f"EXEMPLO FICTICIO original {i}",
+                 "origem": "humano", "decisao_humana": d, "rotulo_sugerido": "cardapio",
+                 "rotulo_corrigido": "horarios" if d == "corrigir" else "", "uso_proposto": "treino"}
+            linhas.append(r)
+            originais.append(dict(r))
+        treino, teste = a.selecionar_ratificadas(linhas, originais)
+        self.assertEqual(len(treino), 2)
+        self.assertEqual(teste, [])
+        self.assertEqual([r["intencao"] for r in treino], ["cardapio", "horarios"])
+        linhas[0]["texto_original"] += "ALTERADO"
+        with self.assertRaises(a.ErroRevisao):
+            a.selecionar_ratificadas(linhas, originais)
+
+    def test_pacote_contem_apenas_csv_de_treino_autorizado(self):
+        pacote = a.pacote_somente_treinamento(self.treino, a.MIN_TREINO)
+        self.assertEqual(set(pacote), {"pacote_treinamento_07b/INSTRUCOES.md",
+                                      "pacote_treinamento_07b/treino_autorizado.csv"})
+        csv_treino = pacote["pacote_treinamento_07b/treino_autorizado.csv"]
+        self.assertEqual(csv_treino, a.serializar_oficial(self.treino))
+        for r in self.teste:
+            self.assertTrue(all(r["texto"].encode() not in b for b in pacote.values()))
+
+    def test_hash_do_csv_e_deterministico_e_sensivel_ao_texto(self):
+        b = a.serializar_oficial(self.teste)
+        self.assertEqual(a.digest(b), a.digest(a.serializar_oficial(self.teste)))
+        alterado = [dict(r) for r in self.teste]
+        alterado[0]["texto"] += "ALTERADO"
+        self.assertNotEqual(a.digest(b), a.digest(a.serializar_oficial(alterado)))
+
+
 if __name__ == "__main__":
     unittest.main()
