@@ -417,6 +417,148 @@ recusa sobrescrever trabalho do revisor. O hash do contexto vincula seleção,
 rótulos propostos, lados e versões das fontes. É integridade, não autenticação
 da identidade do responsável que declara as decisões.
 
+## Curadoria sob autorização delegada — Missão 07A
+
+### Autoridade, ferramenta e limites
+
+O responsável informou ter examinado o CSV e autorizou expressamente o Codex a
+decidir individualmente, inclusive registrar `decisao_humana=aprovar` sob delegação.
+Também determinou: **“Essa autorização não significa que eu tenha revisado
+individualmente todas as frases. Não declare isso.”** Esta seção registra essa
+decisão interna do grupo, não uma nova exigência ou aprovação do professor.
+
+Ferramenta: **Codex**. Modelo: **família GPT-6**, informada nesta sessão;
+variante/identificador exato não exposto. Não se pesquisaram configurações ou
+credenciais para preencher essa lacuna. A política do PDF permite IA em qualquer
+etapa, com declaração; continuam obrigatórias a autoria humana do texto de teste,
+a separação dos conjuntos e a responsabilidade do grupo pelo material entregue.
+
+As 654 candidatas foram lidas integralmente pelo Codex. Expressões regulares e
+colunas não decidiram a curadoria: saudação não anulou pedido operacional,
+negações do domínio foram consideradas e dúvidas sem rótulo seguro ficaram
+pendentes. Não houve revisão manual individual atribuída ao responsável.
+
+Critérios internos de qualidade, adicionais aos mínimos oficiais:
+
+- Excluir repetições que apenas acrescentam saudação, partícula ou erro de grafia.
+  O professor não exige unicidade semântica absoluta por intenção; este filtro
+  busca evitar que repetições superficiais inflem a diversidade e a capacidade.
+- Preservar elipses com operação reconhecível no contexto fixo do assistente RU,
+  sem usar a coluna de coleta como contexto oculto. Pedidos que poderiam apontar
+  para intenções diferentes permaneceram pendentes.
+- Manter variações com condições explícitas, como curso ou dia consultado,
+  registrando que pertencem a famílias de templates. Considerar essas famílias
+  na futura validação cruzada, sem alegar que esse experimento já foi executado.
+- Não transformar perguntas sobre regras, cardápios ou recarga em afirmações
+  factuais sobre o RU; a autoria e o texto original permanecem intactos.
+
+### Backups, ledger e importação
+
+A base ativa já tinha sido migrada para 67 envios no início da missão, e sua
+revisão tinha 1.901 linhas pendentes. Antes de registrar decisões, preservaram-se
+os arquivos privados `revisao_humana_backup_07a.csv`,
+`revisao_prioritaria_backup_07a.csv` e `plano_curadoria_67_backup_07a.json`.
+
+O registro auxiliar `dados/_brutos/auditoria_delegada_07a.json` contém, para cada
+ID, texto original, hash, origem da frase, rótulos anterior/proposto/final,
+decisão, justificativa, referência de duplicata ou substituição e ferramenta/modelo.
+Registra `origem_decisao=ia_sob_autorizacao_expressa` e
+`revisao_manual_individual=false`, com referência à autorização da Missão 07A.
+Todos esses arquivos continuam privados, ignorados e fora dos commits.
+
+A planilha prioritária e o plano foram versionados localmente por hashes,
+preservando os backups e os IDs das 654 candidatas iniciais. Acrescentaram-se
+55 suplentes/complementos da base existente, analisados individualmente e sem
+alterar textos ou origens. São 53 relações de substituição e dois complementos
+para mínimos ainda insuficientes. A divisão por envio permaneceu **31/36**.
+
+O importador reutiliza as validações anteriores e confere também autorização,
+ledger, backups, hashes, IDs, rótulos e origem da decisão. As observações do mestre
+recebem o marcador `origem_decisao=ia_delegada;autorizacao=missao_07a;`, ferramenta,
+modelo, justificativa e indicação explícita de ausência de revisão manual individual.
+O nome legado `decisao_humana` foi mantido por compatibilidade; não comprova quem
+fez a revisão. Os relatórios distinguem a curadoria delegada das demais declarações.
+
+```bash
+# Reproduzir a validação, sem gravar:
+python3 -I -B scripts/auditar_dados.py --importar-delegada
+
+# Persistir somente após validar ledger e backups; repetição é idempotente:
+python3 -I -B scripts/auditar_dados.py --aplicar-delegada
+```
+
+O comando legado `--importar-prioritaria` também exige o ledger quando ele existe,
+para não perder a proveniência delegada. Nenhum desses comandos cria CSVs oficiais.
+A escrita nativa foi bloqueada pelo sandbox; após a validação, a revisão mestre
+foi gravada pelo editor e revalidada pelo mesmo importador. Hash atual do mestre:
+`7c59cb6bb992110a9c6957c9a63053b92736643c9abd0fe294107138a6fe99c4`.
+
+### Resultado efetivo, não aprovação manual individual
+
+| Universo | Aprovar por delegação | Corrigir | Rejeitar | Pendente |
+|---|---:|---:|---:|---:|
+| 654 candidatas iniciais | 524 | 1 | 116 | 13 |
+| 55 suplentes/complementos | 51 | 4 | 0 | 0 |
+| **709 registros** | **575** | **5** | **116** | **13** |
+
+Das rejeições, 115 se referem a variantes superficiais/paráfrases adjudicadas e
+uma a metarresposta sem pedido classificável. As cinco correções explícitas estão
+nos IDs `S0087:C07`, `H0043:C02`, `H0049:C08`, `H0066:C02` e `S0024:C05`.
+Os textos e as justificativas completas ficam exclusivamente no ledger privado.
+
+Na compatibilização com o mestre, 48 aprovações de rótulos já sugeridos na planilha
+prioritária foram transportadas como `corrigir`, pois a sugestão lexical antiga
+do mestre diferia. Assim, o mestre registra 527 `aprovar`, 53 `corrigir`,
+116 `rejeitar` e 1.205 `pendente`. As últimas incluem 1.192 respostas fora do
+conjunto de decisões registradas nesta missão. Não contar essa conversão como novas
+frases ou novas revisões; permanecem **580 exemplos aceitos**.
+
+| Classe | Treino humano | Treino LLM existente | Treino total | Teste humano | Falta para treino |
+|---|---:|---:|---:|---:|---:|
+| cardapio | 40 | 10 | 50 | 15 | 0 |
+| horarios | 34 | 16 | 50 | 15 | 0 |
+| valores | 32 | 18 | 50 | 15 | 0 |
+| recarga_creditos | 32 | 14 | 46 | 15 | 4 |
+| cadastro | 26 | 17 | 43 | 15 | 7 |
+| regras_uso | 26 | 17 | 43 | 15 | 7 |
+| chitchat | 25 | 21 | 46 | 30 | 54 |
+| fora_dominio | 53 | 39 | 92 | 40 | 58 |
+| **Total** | **268** | **152** | **420** | **160** | **130** |
+
+Treino atual: **63,81% humano**. Se as 130 faltantes fossem posteriormente obtidas
+como LLM, revisadas e independentes, o alvo de 550 teria **48,73% humano**.
+Esta é uma projeção, não autorização para gerar ou uma execução já realizada.
+As faltas são da seleção aprovada, não prova de esgotamento das outras respostas
+da base. Curadoria adicional do acervo ainda pendente pode reduzir o complemento;
+não interpretar 130 como quantidade inevitável de novas frases sintéticas.
+
+O teste proposto tem todos os mínimos e é 100% humano, com quatro substituições:
+`H0018:C02 → H0021:C03`, `H0037:C07 → H0064:C07`,
+`H0005:C09 → H0061:C09` e `H0040:C09 → H0057:C10`.
+Os mesmos envios continuam reservados. As verificações não encontraram
+interseções normalizadas, quase duplicatas ou sinais lexicais de paráfrase entre
+os aceitos de treino e teste, nos limiares documentados. Isso não prova ausência
+universal de parentesco semântico. O ledger também registra uma possível
+paráfrase interna ao teste, mantida com ressalva por solicitar informações adicionais.
+
+### Pendências e preparação do congelamento
+
+Continuam pendentes `H0005:C09`, `H0012:C05`, `H0017:C07`, `H0020:C03`,
+`H0020:C10`, `H0028:C08`, `H0030:C06`, `H0033:C03`, `H0033:C11`,
+`H0036:C02`, `H0049:C10`, `H0066:C04` e `S0010:C01`.
+Os motivos envolvem instituição citada, objeto omitido, fronteira de intenção,
+mistura de pedidos e interpretação não segura. Não foram aprovados para fechar quotas.
+
+O treino ainda não atende aos mínimos: a curadoria não está concluída como
+preparação de todos os dados oficiais. Resolver necessidades específicas, obter
+complemento válido e independente, e autorizar o congelamento são etapas seguintes.
+O teste está preparado para essa decisão, mas permanece `congelado=false`;
+`dados/treino.csv` e `dados/teste.csv` não foram criados ou alterados.
+
+No artigo e no vídeo, distinguir autoria humana dos textos de teste de seleção,
+rotulagem e aprovação assistidas por IA delegada. Uma futura geração deve receber
+somente treino aprovado e contagens de falta em contexto sem respostas de teste.
+
 ## Evidências e próximos passos
 
 O script confere novamente os bytes dos dois arquivos ao terminar e falha se uma
