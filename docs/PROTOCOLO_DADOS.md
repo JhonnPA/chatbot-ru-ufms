@@ -559,6 +559,92 @@ No artigo e no vídeo, distinguir autoria humana dos textos de teste de seleçã
 rotulagem e aprovação assistidas por IA delegada. Uma futura geração deve receber
 somente treino aprovado e contagens de falta em contexto sem respostas de teste.
 
+## Ratificação e congelamento — Missão 07B
+
+O responsável declarou leitura integral de `revisao_prioritaria.csv` e ratificou
+as **709 decisões**: 575 aprovações, cinco correções, 116 rejeições e 13 pendências.
+A conferência humana posterior está registrada separadamente em
+`dados/_brutos/ratificacao_07b.json`, vinculada aos hashes da planilha, do mestre,
+do plano e do ledger. O histórico de decisões por IA da Missão 07A foi preservado;
+não se reescreveram suas declarações de ausência de revisão manual à época.
+As 13 pendências continuam excluídas, e a ratificação não abrange candidatas novas.
+
+### Teste congelado
+
+`dados/teste.csv` foi preenchido a partir do cabeçalho vazio existente, com somente
+`texto,intencao,origem`, UTF-8 e quebras LF. Tem exatamente **160 frases humanas**:
+15 de cada intenção do RU, 30 `chitchat` e 40 `fora_dominio`. Foram preservados os
+valores originais dos textos, incluindo espaços e quebras internas; não se
+reescreveram frases nem se incluíram rejeitadas ou pendentes.
+
+**SHA-256:** `fa760e167d565a9a3e5bd015465c4ec945f7855e0bd78b5542dc561e21ea9b81`.
+
+O manifesto privado `dados/_brutos/manifesto_conjuntos_07b.json` registra
+`congelado=true`, composição, IDs, hashes e vínculo com a ratificação. O
+`congelado=false` dos planos históricos descreve a etapa anterior, não este estado.
+Não houve duplicatas normalizadas ou interseções com o treino aceito, nem sinais
+de proximidade problemática entre os conjuntos nos controles já implementados.
+O teste permanece vedado a seleção de modelos, tuning, limiares e geração.
+
+### Treinamento e reaproveitamento
+
+Há **420 exemplos autorizados**, 268 humanos e 152 LLM, em
+`dados/_brutos/treino_parcial_07b.csv`: **63,81% humano**. O arquivo oficial
+`dados/treino.csv` conserva somente o cabeçalho vazio; não é um treinamento completo.
+
+| Classe deficitária | Falta autorizada atual | Candidatas novas para conferência | Falta se todas forem ratificadas |
+|---|---:|---:|---:|
+| recarga_creditos | 4 | 3 | 1 |
+| cadastro | 7 | 2 | 5 |
+| regras_uso | 7 | 0 | 7 |
+| chitchat | 54 | 0 | 54 |
+| fora_dominio | 58 | 0 | 58 |
+| **Total** | **130** | **5** | **125** |
+
+As outras três classes já têm 50 exemplos autorizados cada. Com um alvo de 550
+e todos os complementos de origem LLM, a proporção humana projetada é **48,73%**.
+Nenhuma frase nova foi gerada, e nenhuma candidata suplementar foi incorporada.
+
+A busca percorreu as 1.232 respostas preenchidas da base sintética: 256 já tinham
+decisões ratificadas; nove coincidiam com humanas; 259 tinham famílias próximas
+ratificadas sem novidade suficiente na triagem; 453 repetiam núcleos já examinados.
+Foram examinados 255 representantes restantes. Normalização/similaridade apenas
+reduziram a fila; a recomendação final considerou o significado individual.
+O resumo privado `busca_sinteticas_07b.json` registra fonte, hash, método e limites.
+Essa busca não certifica esgotamento absoluto do acervo.
+
+Cinco candidatas estão em `dados/_brutos/candidatas_sinteticas_07b.csv`, todas com
+`origem=llm` e `decisao_humana=pendente`: `S0004:C05`, `S0009:C05`, `S0025:C05`,
+`S0004:C06` e `S0005:C06`. As três de recarga têm domínio RU implícito e exigem
+conferência dessa interpretação. As duas de cadastro consultam local de retirada
+e procedimento de emissão do cartão e pertencem a uma família relacionada.
+Os textos, sugestões, famílias e justificativas estão na planilha privada;
+não se atribui a elas a ratificação das 709 decisões anteriores.
+
+### Pacote isolado e verificação
+
+Para o futuro ambiente gerador, copiar **somente**
+`dados/_brutos/pacote_treinamento_07b/`, que contém:
+
+- `treino_autorizado.csv`: cópia exata dos 420 exemplos autorizados de treino.
+- `INSTRUCOES.md`: definições das oito classes, faltas atuais e instruções de
+  diversidade, revisão e registro de ferramenta/modelo/prompts.
+
+O pacote não contém formulários, textos/IDs/manifestos do teste, nem as candidatas
+novas ainda não ratificadas. Antes de gerar, conferir essas candidatas e atualizar
+as quantidades necessárias. As 130 faltas atuais não são autorização para geração
+e podem diminuir com novo reaproveitamento autorizado.
+
+```bash
+python3 -I -B scripts/auditar_dados.py --conferir-conjuntos
+```
+
+Esse comando reusa a validação da curadoria, confere a ratificação por hashes,
+reconstrói os bytes esperados e verifica teste, parcial, manifesto e pacote.
+Não treina, não gera frases, não executa avaliadores e não altera o teste congelado.
+Somente as cinco candidatas novas e as pendências específicas exigem conferência
+adicional; não repetir a revisão ratificada nem reabrir o teste para melhoria de modelos.
+
 ## Evidências e próximos passos
 
 O script confere novamente os bytes dos dois arquivos ao terminar e falha se uma

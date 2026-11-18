@@ -13,6 +13,8 @@ Os registros 1–5 e a reflexão histórica foram preservados. As afirmações d
 nesses registros pertencem ao relato anterior do grupo e não foram revalidadas
 nesta sessão. As entradas 6–15 não declaram revisão manual individual concluída;
 a entrada 15 registra curadoria por IA sob autorização expressa delegada.
+A conferência humana posterior das 709 decisões foi declarada pelo responsável
+na Missão 07B e está registrada na entrada 16, preservando esse histórico.
 
 ## 1. Ferramentas usadas
  
@@ -41,8 +43,9 @@ a entrada 15 registra curadoria por IA sob autorização expressa delegada.
 | 13 | Fluxo de revisão humana — Missão 05 | Codex estendeu o auditor existente para exportar planilha local ignorada com textos originais e decisões pendentes, validar/importar decisões declaradas, recontar aprovadas e simular divisões por envio; acrescentou testes fictícios e documentação, sem aprovar rótulos nem criar conjuntos oficiais | “MISSÃO 05 — Curadoria humana e preparação dos conjuntos do RANGOT”: preservar textos/origens, permitir correções humanas, manter revisão privada e reavaliar 29/19, 30/18 e 31/17 sem modelos | Implementação e preparação da planilha autorizadas; decisões e aprovação da divisão pertencem ao responsável humano e começam pendentes. Testes e verificações técnicas são informados no relatório da missão. Nenhum treinamento, avaliação final, geração para os CSVs científicos ou OpenRouter foi executado |
 | 14 | Ampliação da base e curadoria prioritária — Missão 06 | Codex comparou as versões e backups sem depender da ordem, implementou migração rastreável de decisões, examinou semanticamente as 669 respostas humanas e preparou sugestões privadas por ID/hash, uma revisão ampliada pendente e uma seleção prioritária com proposta de divisão por envio | “MISSÃO 06 — Atualizar a base humana para 67 envios e preparar a curadoria definitiva”: verificar preservação dos 48 envios e 19 adições, preservar origens/textos, planejar mínimos sem modelos e facilitar revisão humana | Código, testes e documentação implementados; a gravação nativa da substituição foi bloqueada pelo sandbox antes de alterar base/revisão ativas. Arquivos privados da nova revisão e proposta preparados pelo editor. Rótulos e divisão continuam sem aprovação humana. Sem treinamento, avaliação final, geração adicional de dados científicos ou OpenRouter |
 | 15 | Curadoria semântica com aprovação delegada — Missão 07A | Codex, família GPT-6 informada nesta sessão, variante exata não exposta, leu individualmente as 654 candidatas e 55 suplentes/complementos incorporados; registrou 575 aprovações delegadas, cinco correções, 116 rejeições e 13 pendências; implementou ledger privado, validação e importação com proveniência, testes fictícios e documentação | “MISSÃO 07A — Curadoria semântica com aprovação delegada pelo responsável”: autorização expressa para decidir individualmente e registrar aprovações, com origem IA declarada, sem atribuir revisão manual individual ao responsável | O responsável declarou ter examinado o CSV e delegou decisões; não confirmou leitura individual de todas as frases. Revisão mestre importada com observações de delegação e backups preservados. Teste proposto com 160 textos humanos originais; treino com 420 exemplos e falta de 130 pelos critérios adotados. Persistem 13 pendências e não houve congelamento, construção dos CSVs oficiais, treinamento, avaliação final, geração adicional de frases científicas ou OpenRouter |
+| 16 | Ratificação humana e preparação dos conjuntos — Missão 07B | Codex registrou a conferência expressa do responsável, validou o snapshot ratificado, materializou e congelou 160 textos humanos originais em dados/teste.csv, exportou treino parcial autorizado de 420 exemplos e pacote exclusivo de treinamento, e investigou reaproveitamento da base sintética com cinco novas candidatas separadas para conferência | “MISSÃO 07B — Ratificar a curadoria e construir os conjuntos do RANGOT”: preservar as 709 decisões ratificadas, manter pendências excluídas, congelar teste após validação, buscar reaproveitamento e isolar o material da futura geração | O responsável declarou leitura integral e concordância com 575 aprovações, cinco correções, 116 rejeições e 13 pendências. Essa conferência posterior não altera a autoria delegada histórica das decisões da Missão 07A. As cinco novas candidatas permanecem pendentes e não entram no treino autorizado. Treino oficial ainda incompleto; sem geração de frases científicas, treinamento de modelos, avaliadores ou OpenRouter |
 
-Os resumos das entradas 8–15 correspondem às instruções desta conversa; suas
+Os resumos das entradas 8–16 correspondem às instruções desta conversa; suas
 íntegras não estão arquivadas no repositório. Os resumos retrospectivos 6–7
 registram o relato do responsável, sem reconstruir prompts anteriores como se
 fossem transcrições verificadas.
@@ -52,12 +55,12 @@ fossem transcrições verificadas.
 As três afirmações históricas abaixo são preservadas do relato anterior; esta
 sessão não comprova a autoria externa desses materiais. Não estender essas
 afirmações à triagem dos CSVs ou à redação deste contrato, que receberam apoio
-generativo conforme as entradas 8–15.
+generativo conforme as entradas 8–16.
  
 - Escolha do tema e definição das intenções (feitas pelo grupo na proposta de 23/10/2026).
 - Informação sobre as formas de pagamento (débito, crédito, Pix).
 - Obtenção do Guia Prático do RU 2026 e download dos documentos oficiais.
-- Autoria das frases candidatas ao teste: declarada humana pelo responsável; nenhuma frase de teste foi gerada ou parafraseada pela IA. Na Missão 07A, seleção, rotulagem e aprovação foram realizadas pelo Codex sob delegação expressa, sem revisão manual individual atribuída ao responsável. O congelamento permanece pendente.
+- Autoria das frases do teste: declarada humana pelo responsável; nenhuma foi gerada ou parafraseada pela IA. A seleção/rotulagem delegada da Missão 07A foi posteriormente conferida e ratificada pelo responsável na Missão 07B. O teste de 160 frases foi congelado com os textos originais preservados.
 - Análise de erros experimentais e conclusões finais: ainda não realizadas nessas missões; registrar qualquer assistência futura antes de afirmar independência de IA.
 
 ## 4. Reflexão (2 a 4 frases)
@@ -92,7 +95,7 @@ mostrando que a capacidade anterior era provisória. A delegação não dispensa
 grupo de compreender e justificar o material, nem permite declarar que todos os
 conjuntos estão completos enquanto persistirem as faltas documentadas.
 
-- Missão 07A: a curadoria e a aprovação dos rótulos foram feitas pelo Codex sob autorização delegada, não por revisão manual individual do responsável. Levar essa distinção ao artigo e ao vídeo. As frases humanas de teste foram preservadas, sem geração ou paráfrase; sua seleção/rotulagem recebeu assistência decisória de IA. Resolver as 13 pendências específicas e a falta de 130 exemplos de treino antes de declarar os conjuntos completos ou congelados.
+- Missões 07A/07B: levar ao artigo e ao vídeo a autoria delegada inicial das decisões e a conferência humana posterior expressamente declarada. As 13 pendências permanecem excluídas; o teste já foi congelado. O treino tem 420 exemplos autorizados e falta de 130. Conferir as cinco novas candidatas existentes antes de definir o complemento final; nenhuma foi abrangida pela ratificação anterior.
 
 - Missão 06 (histórico): a incorporação dos 67 envios foi observada concluída antes da Missão 07A. As projeções anteriores foram substituídas pela curadoria delegada registrada na entrada 15; não eram resultados de modelos nem revisão manual individual.
 
