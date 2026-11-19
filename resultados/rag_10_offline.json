@@ -1,0 +1,330 @@
+{
+  "missao": "10",
+  "modo": "offline_sem_OpenRouter",
+  "modelo_configurado": "openai/gpt-6-luna",
+  "limiar": 0.6,
+  "validacoes": {
+    "testes_anteriores_preservados": 124,
+    "testes_novos_aprovados": 25,
+    "testes_totais_aprovados": 149,
+    "testes_ignorados": 0,
+    "hash_treino": "fc260493bf144e3a6b5ecac2e2e7064f31b53dda597948cfc8e689fea5b665f5",
+    "hash_teste": "fa760e167d565a9a3e5bd015465c4ec945f7855e0bd78b5542dc561e21ea9b81",
+    "modelos_intactos": true,
+    "tres_arquivos_oficiais_identicos_a_develop": true,
+    "resultados_08_09_e_notebook_preservados": true,
+    "assinaturas_e_logica_de_credenciais_preservadas": true,
+    "git_diff_check_sem_erros": true
+  },
+  "documentos": [
+    {
+      "arquivo": "cadastro/requisitos_subsidio_2026.md",
+      "paginas": null,
+      "paginas_pdf_sem_texto": null,
+      "trechos": 3,
+      "intencao": "cadastro"
+    },
+    {
+      "arquivo": "cardapio/cardapio_2026.md",
+      "paginas": null,
+      "paginas_pdf_sem_texto": null,
+      "trechos": 7,
+      "intencao": "cardapio"
+    },
+    {
+      "arquivo": "geral/resolucao_399_2025.pdf",
+      "paginas": 11,
+      "paginas_pdf_sem_texto": 0,
+      "trechos": 38,
+      "intencao": "geral"
+    },
+    {
+      "arquivo": "horarios/horarios_2026.md",
+      "paginas": null,
+      "paginas_pdf_sem_texto": null,
+      "trechos": 6,
+      "intencao": "horarios"
+    },
+    {
+      "arquivo": "recarga_creditos/formas_de_pagamento.md",
+      "paginas": null,
+      "paginas_pdf_sem_texto": null,
+      "trechos": 4,
+      "intencao": "recarga_creditos"
+    },
+    {
+      "arquivo": "regras_uso/regras_de_uso_2026.md",
+      "paginas": null,
+      "paginas_pdf_sem_texto": null,
+      "trechos": 2,
+      "intencao": "regras_uso"
+    },
+    {
+      "arquivo": "valores/edital_114_2026.pdf",
+      "paginas": 3,
+      "paginas_pdf_sem_texto": 0,
+      "trechos": 13,
+      "intencao": "valores"
+    },
+    {
+      "arquivo": "valores/valores_2026.md",
+      "paginas": null,
+      "paginas_pdf_sem_texto": null,
+      "trechos": 4,
+      "intencao": "valores"
+    }
+  ],
+  "total_documentos": 8,
+  "total_trechos": 77,
+  "indice_construido_em_memoria": true,
+  "cache_em_disco": "Nao gravado nesta sessao; serializacao em memoria e invalidacao cobertas por testes",
+  "cenarios_componentes_controlados": [
+    {
+      "cenario": "horario",
+      "pergunta_ficticia": "Qual horário de almoço do RU em Campo Grande?",
+      "classificadores": "controlados",
+      "rota": "horarios",
+      "fonte_resposta": "llm",
+      "n_trechos": 4,
+      "fontes": [
+        "horarios/horarios_2026.md"
+      ],
+      "chamadas_simuladas": 1
+    },
+    {
+      "cenario": "valores",
+      "pergunta_ficticia": "Sou graduando com CadÚnico; quanto pago no almoço do RU?",
+      "classificadores": "controlados",
+      "rota": "valores",
+      "fonte_resposta": "llm",
+      "n_trechos": 4,
+      "fontes": [
+        "geral/resolucao_399_2025.pdf",
+        "valores/valores_2026.md"
+      ],
+      "chamadas_simuladas": 1
+    },
+    {
+      "cenario": "cadastro",
+      "pergunta_ficticia": "Quais documentos apresento para cadastro com subsídio no RU?",
+      "classificadores": "controlados",
+      "rota": "cadastro",
+      "fonte_resposta": "llm",
+      "n_trechos": 4,
+      "fontes": [
+        "cadastro/requisitos_subsidio_2026.md",
+        "geral/resolucao_399_2025.pdf"
+      ],
+      "chamadas_simuladas": 1
+    },
+    {
+      "cenario": "pagamento",
+      "pergunta_ficticia": "No RU posso pagar por Pix?",
+      "classificadores": "controlados",
+      "rota": "recarga_creditos",
+      "fonte_resposta": "llm",
+      "n_trechos": 4,
+      "fontes": [
+        "recarga_creditos/formas_de_pagamento.md"
+      ],
+      "chamadas_simuladas": 1
+    },
+    {
+      "cenario": "cardapio_datado",
+      "pergunta_ficticia": "O que será servido no almoço do RU em 19/11/2026?",
+      "classificadores": "controlados",
+      "rota": "cardapio",
+      "fonte_resposta": "llm",
+      "n_trechos": 4,
+      "fontes": [
+        "cardapio/cardapio_2026.md",
+        "geral/resolucao_399_2025.pdf"
+      ],
+      "chamadas_simuladas": 1
+    },
+    {
+      "cenario": "regra_nao_documentada",
+      "pergunta_ficticia": "Posso usar micro-ondas no RU para uma marmita?",
+      "classificadores": "controlados",
+      "rota": "regras_uso",
+      "fonte_resposta": "llm",
+      "n_trechos": 4,
+      "fontes": [
+        "geral/resolucao_399_2025.pdf",
+        "regras_uso/regras_de_uso_2026.md"
+      ],
+      "chamadas_simuladas": 1
+    },
+    {
+      "cenario": "fora_dominio",
+      "pergunta_ficticia": "Preciso renovar um livro emprestado na biblioteca.",
+      "classificadores": "controlados",
+      "rota": "fora_dominio",
+      "fonte_resposta": "fixa",
+      "n_trechos": 0,
+      "fontes": [],
+      "chamadas_simuladas": 0
+    },
+    {
+      "cenario": "ambigua",
+      "pergunta_ficticia": "Como uso isso?",
+      "classificadores": "controlados",
+      "rota": "esclarecer",
+      "fonte_resposta": "fixa",
+      "n_trechos": 0,
+      "fontes": [],
+      "chamadas_simuladas": 0
+    },
+    {
+      "cenario": "duas_intencoes",
+      "pergunta_ficticia": "Qual é o cardápio e quanto custa o almoço?",
+      "classificadores": "controlados",
+      "rota": "esclarecer",
+      "fonte_resposta": "fixa",
+      "n_trechos": 0,
+      "fontes": [],
+      "chamadas_simuladas": 0
+    },
+    {
+      "cenario": "falha_api",
+      "pergunta_ficticia": "Qual horário de almoço em Campo Grande?",
+      "classificadores": "controlados",
+      "rota": "horarios",
+      "fonte_resposta": "fixa (falha no LLM)",
+      "n_trechos": 4,
+      "fontes": [
+        "horarios/horarios_2026.md"
+      ],
+      "chamadas_simuladas": 1
+    },
+    {
+      "cenario": "sem_fonte",
+      "classificadores": "controlados",
+      "rota": "horarios",
+      "fonte_resposta": "fixa (sem fonte documental)",
+      "n_trechos": 0,
+      "fontes": [],
+      "chamadas_simuladas": 0
+    },
+    {
+      "cenario": "sem_chave_simulada",
+      "classificadores": "controlados",
+      "rota": "horarios",
+      "fonte_resposta": "fixa",
+      "n_trechos": 0,
+      "fontes": [],
+      "chamadas_simuladas": 0
+    }
+  ],
+  "smoke_modelos_reais_llm_simulado": [
+    {
+      "cenario": "horario",
+      "pergunta_ficticia": "Qual horário de almoço do RU em Campo Grande?",
+      "classificadores": "modelos_08_reais",
+      "rota": "horarios",
+      "confianca_intencao": 0.9768634406232966,
+      "fonte_resposta": "llm",
+      "fontes": [
+        "horarios/horarios_2026.md"
+      ],
+      "chamadas_simuladas": 1
+    },
+    {
+      "cenario": "valores",
+      "pergunta_ficticia": "Sou graduando com CadÚnico; quanto pago no almoço do RU?",
+      "classificadores": "modelos_08_reais",
+      "rota": "valores",
+      "confianca_intencao": 0.8864089980999084,
+      "fonte_resposta": "llm",
+      "fontes": [
+        "geral/resolucao_399_2025.pdf",
+        "valores/valores_2026.md"
+      ],
+      "chamadas_simuladas": 1
+    },
+    {
+      "cenario": "cadastro",
+      "pergunta_ficticia": "Quais documentos apresento para cadastro com subsídio no RU?",
+      "classificadores": "modelos_08_reais",
+      "rota": "cadastro",
+      "confianca_intencao": 0.9637820444439995,
+      "fonte_resposta": "llm",
+      "fontes": [
+        "cadastro/requisitos_subsidio_2026.md",
+        "geral/resolucao_399_2025.pdf"
+      ],
+      "chamadas_simuladas": 1
+    },
+    {
+      "cenario": "pagamento",
+      "pergunta_ficticia": "No RU posso pagar por Pix?",
+      "classificadores": "modelos_08_reais",
+      "rota": "esclarecer",
+      "confianca_intencao": 0.46329517736782444,
+      "fonte_resposta": "fixa",
+      "fontes": [],
+      "chamadas_simuladas": 0
+    },
+    {
+      "cenario": "cardapio_datado",
+      "pergunta_ficticia": "O que será servido no almoço do RU em 19/11/2026?",
+      "classificadores": "modelos_08_reais",
+      "rota": "horarios",
+      "confianca_intencao": 0.8727358216624382,
+      "fonte_resposta": "llm",
+      "fontes": [
+        "horarios/horarios_2026.md"
+      ],
+      "chamadas_simuladas": 1
+    },
+    {
+      "cenario": "regra_nao_documentada",
+      "pergunta_ficticia": "Posso usar micro-ondas no RU para uma marmita?",
+      "classificadores": "modelos_08_reais",
+      "rota": "regras_uso",
+      "confianca_intencao": 0.8733800293836745,
+      "fonte_resposta": "llm",
+      "fontes": [
+        "geral/resolucao_399_2025.pdf",
+        "regras_uso/regras_de_uso_2026.md"
+      ],
+      "chamadas_simuladas": 1
+    },
+    {
+      "cenario": "fora_dominio",
+      "pergunta_ficticia": "Preciso renovar um livro emprestado na biblioteca.",
+      "classificadores": "modelos_08_reais",
+      "rota": "fora_dominio",
+      "confianca_intencao": 0,
+      "fonte_resposta": "fixa",
+      "fontes": [],
+      "chamadas_simuladas": 0
+    },
+    {
+      "cenario": "ambigua",
+      "pergunta_ficticia": "Como uso isso?",
+      "classificadores": "modelos_08_reais",
+      "rota": "cadastro",
+      "confianca_intencao": 0.7235644366966472,
+      "fonte_resposta": "llm",
+      "fontes": [
+        "geral/resolucao_399_2025.pdf"
+      ],
+      "chamadas_simuladas": 1
+    },
+    {
+      "cenario": "duas_intencoes",
+      "pergunta_ficticia": "Qual é o cardápio e quanto custa o almoço?",
+      "classificadores": "modelos_08_reais",
+      "rota": "esclarecer",
+      "confianca_intencao": 0.5275629102176398,
+      "fonte_resposta": "fixa",
+      "fontes": [],
+      "chamadas_simuladas": 0
+    }
+  ],
+  "llm_remoto_testado": false,
+  "chamadas_reais_OpenRouter": 0,
+  "credenciais_acessadas": false,
+  "limites": "Mocks verificam encadeamento/contratos e nao comprovam obediencia do GPT-6 Luna ou qualidade de geracao real; recuperar trechos nao garante resposta suficiente. Modelos reais podem rotear incorretamente. Nenhuma avaliacao oficial foi executada."
+}

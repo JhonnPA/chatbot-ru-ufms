@@ -1,5 +1,17 @@
 # Experimentos de classificadores — Missão 08
 
+> **Ressalva documental — 19/11/2026, Missão 11A:** o estado de execução
+> bloqueada descrito abaixo pertence à sessão inicial de implementação. Os
+> resultados reais, modelos e `ESTADO_EXECUCAO.json` atualmente armazenados
+> registram conclusão posterior e foram preservados. A auditoria independente
+> Claude relatou falha de reprodução integral do notebook em ambiente isolado;
+> essa falha não foi reproduzida/corrigida na 11A e seu traceback não foi fornecido.
+> Não confundir artefatos executados com reprodução integral comprovada por kernel
+> limpo. A confirmação de revisão das 124 frases e de G07G:003 está registrada
+> na entrada 30 de `USO_DE_IA.md`; proveniência da geração continua separada.
+> Próxima análise: `MISSAO_11A.md`, sem executar os comandos experimentais abaixo
+> neste checkout congelado ou nesta missão documental.
+
 ## Estado desta sessão
 
 **Implementação preparada; execução científica bloqueada.** A branch conferida é

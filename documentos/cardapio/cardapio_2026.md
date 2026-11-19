@@ -1,5 +1,9 @@
 # Cardápio dos Restaurantes Universitários da UFMS (2026)
 
+Este documento descreve o planejamento e a composição geral das refeições do Guia
+Prático de 2026. Não é um cardápio datado e não identifica os pratos servidos em
+um dia específico. Para uma data, é necessário consultar a publicação vigente do RU.
+
 ## Planejamento
 
 O cardápio é mensal, elaborado por nutricionistas das empresas terceirizadas com base no Guia Alimentar para a População Brasileira, do Ministério da Saúde. Antes da publicação, os cardápios passam por análise de profissional especializado da Pró-Reitoria de Assuntos Estudantis (Proaes), que aprova e autoriza a publicação. No cardápio publicado é obrigatório registrar a gramatura de cada porção, e a empresa deve disponibilizar balanças para o usuário conferir as quantidades.

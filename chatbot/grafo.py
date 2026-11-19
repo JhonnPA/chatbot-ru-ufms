@@ -164,8 +164,8 @@ def construir_grafo(config: Config, clf_escopo, clf_tema, checkpointer=None, llm
         try:
             texto = llm.conversar(montar_prompt(estado["mensagem"], estado.get("historico", [])))
             return {**_registro(estado, rota, texto, fonte="llm"), **extras}
-        except ErroLLM as e:
-            return {**_registro(estado, rota, resposta_fixa, fonte=f"fixa (falha no LLM: {e})"), **extras}
+        except ErroLLM:
+            return {**_registro(estado, rota, resposta_fixa, fonte="fixa (falha no LLM)"), **extras}
 
     # --- nós dos classificadores -------------------------------------------
     def classificar_escopo(estado: EstadoChat) -> dict:
@@ -212,9 +212,12 @@ def construir_grafo(config: Config, clf_escopo, clf_tema, checkpointer=None, llm
 
         def responder(estado: EstadoChat) -> dict:
             # RAG: recupera os trechos mais parecidos (só da intenção prevista + gerais)
-            trechos = base.buscar(estado["mensagem"], intencao=nome) if base is not None and usar_em else []
+            trechos = base.buscar(estado["mensagem"], intencao=nome) if base is not None and "intencoes" in usar_em else []
             registro = [{"fonte": t.fonte, "pagina": t.pagina, "intencao": t.intencao,
                          "similaridade": round(sim, 3), "texto": t.texto} for t, sim in trechos]
+            if "intencoes" in usar_em and not trechos:
+                falta = "Não encontrei informação documental suficiente para essa pergunta. Consulte " + config.llm["contato"] + "."
+                return {**_registro(estado, nome, falta, fonte="fixa (sem fonte documental)"), "trechos": []}
             return redigir(estado, nome, "intencoes",
                            lambda m, h: prompt_intencao(config, nome, m, h, trechos), resposta,
                            extras={"trechos": registro})

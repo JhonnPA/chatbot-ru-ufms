@@ -1,230 +1,235 @@
-# Trabalho Prático de IA (2026/2): chatbot com classificação de intenções e RAG
+# RANGOT — chatbot do Restaurante Universitário da UFMS
 
-**Inteligência Artificial · Graduação · FACOM/UFMS · Prof. Bruno Nogueira**
+Trabalho Prático de Inteligência Artificial, FACOM/UFMS, 2026/2, professor Bruno
+M. Nogueira. O RANGOT informa sobre o RU, reconhece conversa social, recusa
+pedidos fora do domínio e pede esclarecimento quando a intenção tem baixa
+confiança. A autoridade é o enunciado original do professor (PDF de 29 páginas
+distribuído aos grupos; não versionado neste repositório).
 
-Código base do trabalho em grupo. Vocês vão construir um chatbot para um tema do
-cotidiano universitário. A cada mensagem, **dois classificadores treinados pelo
-grupo** decidem **se** o bot deve responder e **sobre o quê**; depois, o bot
-**busca nos documentos oficiais** do tema os trechos mais relevantes e um **LLM**
-(acessado pelo OpenRouter, com a chave que o professor envia ao grupo) redige a
-resposta a partir desses trechos. Tudo isso é orquestrado por um grafo de estados
-([LangGraph](https://langchain-ai.github.io/langgraph/)).
+**Estado em 19/11/2026:** dados/modelos congelados, experimentos 08/A1 armazenados
+e RAG integrado. A falha de reprodução integral do notebook apontada pela auditoria
+independente foi corrigida na Missão 11B: execução integral aprovada (22/22 células)
+em cópia `git archive`, com métricas 08/09 reproduzidas sem diferença; veja
+[REPRODUTIBILIDADE_11B.md](docs/REPRODUTIBILIDADE_11B.md). `verificar_entrega.py`:
+0 erros. Artigo, vídeo e avaliação final ainda não estão concluídos.
 
-```
-                         ┌─ chitchat ─────▶ resposta social (LLM)
-mensagem ─▶ [1. escopo] ─┼─ fora_dominio ─▶ recusa educada
-                         └─ dominio ─▶ [2. tema] ─┬─ confiança baixa ─▶ "você quis dizer...?"
-                                                  └─ intenção X ─▶ busca nos documentos de X
-                                                                    ─▶ LLM redige a resposta
-```
+## Escopo e arquitetura
 
-O **enunciado** (no AVA) tem a explicação completa, passo a passo, com exemplos e
-figuras. Este README é o guia rápido do repositório.
-
----
-
-## 1. Instalação
-
-### No seu computador (recomendado)
-
-Precisa de Python 3.10 ou mais novo e do Git.
-
-```bash
-git clone <endereço do repositório do grupo>
-cd <pasta do repositório>
-python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-jupyter lab                        # abra notebooks/00_exemplo_biblioteca.ipynb
-```
-
-### No Google Colab
-
-Abra o notebook pelo GitHub (`Arquivo → Abrir notebook → GitHub`) e edite a
-variável `REPO_URL` na primeira célula: ela clona o repositório e instala as
-dependências. Os arquivos criados no Colab **somem** quando a sessão termina - faça
-commit/push do que importa (dados, documentos, modelos).
-
-## 2. A chave do OpenRouter
-
-O professor envia **uma chave por grupo**. Ela dá acesso a LLMs pagos com os
-créditos do grupo, então é **secreta**.
-
-* **No computador:** copie `.env.exemplo` para `.env` e cole a chave:
-
-  ```
-  OPENROUTER_API_KEY=sk-or-v1-...a chave do grupo...
-  ```
-
-  O `.env` está no `.gitignore`: ele **não** vai para o GitHub. Nunca cole a chave em
-  notebooks, no código ou em mensagens públicas. Chave vazada? Avise o professor
-  imediatamente.
-* **No Colab:** ícone de chave 🔑 na barra lateral (*Secrets*) → *Adicionar novo
-  secret* → nome `OPENROUTER_API_KEY`, valor = a chave → ative *Acesso ao notebook*.
-* **Teste:** `python scripts/testar_llm.py`.
-
-Sem chave, tudo continua funcionando com as **respostas fixas** do `grupo.yaml`; só
-as respostas redigidas pelo LLM ficam desligadas. A **avaliação automática roda
-sempre sem LLM**.
-
-## 3. Primeiro contato (15 minutos)
-
-```bash
-# converse com o bot de exemplo (tema: biblioteca fictícia)
-python scripts/conversar.py --config exemplos/biblioteca/grupo.yaml --depurar
-
-# teste a busca nos documentos do exemplo (não gasta créditos)
-python scripts/indexar_documentos.py --config exemplos/biblioteca/grupo.yaml --buscar "posso renovar pelo celular?"
-
-# rode a avaliação padronizada no exemplo
-python scripts/avaliar.py --config exemplos/biblioteca/grupo.yaml
-```
-
-Depois, leia e execute `notebooks/00_exemplo_biblioteca.ipynb`: ele percorre todas
-as etapas do trabalho no tema de exemplo.
-
-> Os modelos de exemplo foram salvos com uma versão específica do scikit-learn. Se
-> aparecer erro ou aviso de versão ao carregá-los, execute o notebook 00 - ele
-> treina e salva os modelos de novo com a sua versão.
-
----
-
-## 4. Estrutura do repositório
-
-```
-.
-├── grupo.yaml                  ← 🔨 configuração: tema, intenções, respostas, LLM, base
-├── .env.exemplo                ← modelo do .env (a chave do OpenRouter vai no .env)
-├── USO_DE_IA.md                ← 🔨 registro de TODO uso de IA (obrigatório; ver enunciado)
-├── dados/
-│   ├── treino.csv              ← 🔨 frases de treino (texto,intencao,origem)
-│   ├── teste.csv               ← 🔨 frases de teste (escritas por PESSOAS)
-│   └── README.md               ← formato e regras dos dados
-├── documentos/                 ← 🔨 base de conhecimento (PDF/MD/TXT/HTML) + FONTES.md
-├── modelos/                    ← 🔨 escopo.joblib e tema.joblib (gerados pelo notebook)
-├── notebooks/
-│   ├── 00_exemplo_biblioteca.ipynb   ← exemplo resolvido, já executado
-│   └── 01_trabalho_grupo.ipynb       ← 🔨 notebook entregável do grupo
-├── chatbot/                    ← código base (pacote Python)
-│   ├── rotulos.py              ← rótulos reservados: dominio, chitchat, fora_dominio, esclarecer
-│   ├── config.py               ← leitura/validação do grupo.yaml
-│   ├── dados.py                ← leitura/validação dos CSVs
-│   ├── texto.py                ← normalização e stopwords
-│   ├── representacoes.py       ← TF-IDF de palavras/caracteres, embeddings (opcional)
-│   ├── modelos.py              ← salvar/carregar classificadores (o "contrato")
-│   ├── conhecimento.py         ← documentos → trechos → índice vetorial → busca (RAG)
-│   ├── llm.py                  ← cliente do OpenRouter e os prompts do bot
-│   ├── geracao.py              ← geração de frases de treino com LLM
-│   ├── grafo.py                ← o chatbot em LangGraph
-│   └── avaliacao.py            ← métricas padronizadas da correção
-├── scripts/
-│   ├── testar_llm.py           ← confere a chave do OpenRouter
-│   ├── conversar.py            ← chat no terminal (--depurar mostra rotas e trechos)
-│   ├── indexar_documentos.py   ← cria o índice e testa buscas nos documentos
-│   ├── gerar_dados_llm.py      ← gera frases de treino com o LLM (com registro dos prompts)
-│   ├── baixar_massive.py       ← negativos fáceis em português (base MASSIVE)
-│   ├── avaliar.py              ← avaliação padronizada (a mesma da correção)
-│   └── verificar_entrega.py    ← checklist automático da entrega
-├── exemplos/biblioteca/        ← tema de exemplo completo (não pode ser escolhido)
-├── relatorio/                  ← 🔨 relatorio.pdf (formato SBC, até 10 páginas)
-├── resultados/                 ← saída do scripts/avaliar.py
-├── LINKS.txt                   ← 🔨 link do vídeo
-├── requirements.txt
-└── requirements-extra.txt      ← opcional: sentence-transformers (embeddings)
-```
-
-🔨 = o grupo preenche.
-
----
-
-## 5. Como cada peça é usada
-
-| Quero... | Comando / onde |
+| Intenção | Assunto |
 |---|---|
-| conferir se a chave funciona | `python scripts/testar_llm.py` |
-| gerar frases de treino com o LLM | `python scripts/gerar_dados_llm.py` → revisar `dados/gerados_llm.csv` |
-| ver se os documentos respondem uma pergunta | `python scripts/indexar_documentos.py --buscar "pergunta"` |
-| treinar e comparar classificadores | `notebooks/01_trabalho_grupo.ipynb` |
-| conversar com o bot | `python scripts/conversar.py --depurar` (ou `--sem-llm`) |
-| medir o desempenho como o professor | `python scripts/avaliar.py` |
-| saber se a entrega está pronta | `python scripts/verificar_entrega.py` |
+| `cardapio` | Composição das refeições e canal oficial de cardápios |
+| `horarios` | Horários de funcionamento com identificação do campus |
+| `valores` | Subsídios e elegibilidade; integral de Campo Grande não confirmado |
+| `recarga_creditos` | Pagamento/recarga, distinguindo relato e comprovação institucional |
+| `cadastro` | Requisitos e serviços oficiais de cadastro para subsídio |
+| `regras_uso` | Procedimentos comprovados no guia e limites das regras documentadas |
 
----
+O classificador de **escopo** recebe todas as mensagens e distingue `dominio`,
+`chitchat` e `fora_dominio`. O de **intenção** foi treinado somente nas seis
+classes do RU. O LangGraph aplica a cascata: abaixo de **0,60** de probabilidade
+máxima de intenção, a rota é `esclarecer`; social e fora do domínio têm rotas
+próprias. O LLM não escolhe a rota.
 
-## 6. O contrato com a correção automática
+Na intenção do RU, o RAG busca documentos daquela intenção e de `geral/`.
+Com LLM, a resposta usa os trechos recuperados; sem evidência recuperada, informa
+insuficiência. Sem LLM ou em falha de API, há respostas fixas. Preservam-se
+`construir_grafo(config, clf_escopo, clf_tema)` e o estado final com `rota` e
+`resposta`. Grupo, persona e respostas estão em `grupo.yaml`.
 
-O professor corrige todos os grupos com o mesmo script (`scripts/avaliar.py`),
-rodando o bot de cada grupo no teste do próprio grupo **e em conjuntos de teste que
-não serão divulgados**, **sem LLM** (respostas fixas). Para isso funcionar:
+## Dados e experimentos
 
-1. **`grupo.yaml`** com a estrutura do modelo (nomes das chaves), de 5 a 10
-   intenções com nomes em `minusculas_sem_acento`.
-2. **`dados/treino.csv` e `dados/teste.csv`** com as colunas `texto,intencao,origem`.
-3. **`modelos/escopo.joblib` e `modelos/tema.joblib`**: objetos com `predict` (e, de
-   preferência, `predict_proba`) que recebem **uma lista de textos crus**. O de
-   escopo tem exatamente as classes `dominio`, `chitchat` e `fora_dominio`; o de
-   tema, exatamente as intenções do `grupo.yaml`. Um `Pipeline` do scikit-learn
-   salvo com `chatbot.modelos.salvar_classificadores` cumpre tudo isso.
-4. **`chatbot.grafo.construir_grafo(config, clf_escopo, clf_tema)`** devolve o grafo
-   compilado, e `grafo.invoke({"mensagem": texto})` termina com `rota` e `resposta`
-   no estado. **A rota não pode depender do LLM.**
-5. **Não altere** `scripts/avaliar.py`, `scripts/verificar_entrega.py` nem
-   `chatbot/avaliacao.py`.
-6. Toda biblioteca extra que o grupo usar entra no `requirements.txt`.
+Treino: **550 exemplos**, 50 por intenção RU, 100 `chitchat` e 150 `fora_dominio`;
+268 humanos e 282 LLM (**48,73% humanos**). Teste: **160 exemplos humanos**,
+congelados e reservados à avaliação final única. CSVs: `texto,intencao,origem`.
+Revisão humana não transforma geração por IA em autoria humana; consulte o
+[protocolo](docs/PROTOCOLO_DADOS.md).
 
-Funções e classes próprias usadas dentro de um `Pipeline` devem ficar em um módulo
-**dentro de `chatbot/`** - função definida no notebook não pode ser recarregada pelo
-`joblib`.
+Em ambos os estágios foram comparados regressão logística, Complement Naive Bayes
+e SVM linear calibrada, com TF-IDF de palavras `(1,2)` e caracteres `char_wb (2,5)`.
+Usaram-se `StratifiedKFold(5, shuffle=True, random_state=42)`, pipelines,
+GridSearchCV, grades pequenas e F1 macro como critério principal. A calibração
+sigmoide da SVM usa três folds internas com o pipeline completo, incluindo
+vetorização. Os modelos finais recebem textos crus e fornecem probabilidades.
 
-**Antes de entregar:** `python scripts/verificar_entrega.py` deve terminar com
-**0 erro(s)**. Faça commit de tudo (dados, documentos, modelos, relatório) e gere o
-`.zip` com `git archive -o entrega.zip HEAD` - assim o `.env` com a chave fica de fora.
+| Estágio | Vencedor | C | F1 macro CV, média ± desvio | Acurácia CV, média ± desvio |
+|---|---|---:|---:|---:|
+| Escopo | SVM calibrada + caracteres | 1,0 | 0,922867 ± 0,013300 | 0,930909 ± 0,014771 |
+| Intenção | SVM calibrada + caracteres | 0,1 | 0,919959 ± 0,024508 | 0,920000 ± 0,024495 |
 
----
+São resultados históricos reais de **CV interna da Missão 08**, sem teste reservado.
+Busca e OOF pós-seleção compartilham dados e têm viés de seleção; autores/famílias
+sintéticas não foram agrupados nas folds. Comparações por origem são descritivas,
+sem inferência causal. Não são avaliação padronizada ou nota C7.
 
-## 7. Uso de IA generativa
+O aprofundamento **A1** comparou cascata e classificador único de oito classes em
+cinco folds externas comuns, com busca/calibração internas. F1 macro médio:
+cascata **0,882105**, único **0,885115**, sem afirmação de significância. A produção
+preservou a cascata 08. O limiar 0,60 foi escolhido com probabilidades OOF de treino
+e custos explícitos, sem teste; seleção e descrição nos mesmos OOF têm limites.
 
-É **permitido e incentivado** - inclusive para gerar dados, escrever código e
-revisar texto. Mas **todo** uso precisa ser declarado em detalhe numa **seção
-própria do artigo** e na **apresentação (vídeo)**. Uso não declarado é tratado
-como **plágio: nota zero** no trabalho. Registrem cada uso no `USO_DE_IA.md` desde o
-primeiro dia.
+- Modelos: `modelos/escopo.joblib`, `modelos/tema.joblib`, `modelos/versoes.json`.
+- Resultados: `resultados/classificadores_08/` e `resultados/aprofundamento_09/`,
+  com tabelas, matrizes, curvas, parâmetros e metadados.
+- Notebook: [01_trabalho_grupo.ipynb](notebooks/01_trabalho_grupo.ipynb), com saídas
+  saídas da execução integral aprovada na Missão 11B (ver seção de reprodução abaixo).
+- Metodologia: [experimentos](docs/EXPERIMENTOS_CLASSIFICADORES.md),
+  [A1](docs/APROFUNDAMENTO_A1.md) e [Missão 11A](docs/MISSAO_11A.md).
 
----
+## RAG e fontes
 
-## 8. Perguntas frequentes
+O corpus atual tem **dez documentos e 83 trechos**. O recuperador usa TF-IDF de
+caracteres, trechos brutos de até 700 caracteres, cosseno, até quatro resultados
+e mínimo configurado de 0,05. [FONTES.md](documentos/FONTES.md) distingue PDFs
+oficiais, resumos do guia e relatos do grupo. O índice `.vectordb/indice.joblib`
+é reconstruído quando documentos, catálogo, configuração ou código relevante
+mudam, desde que haja permissão de escrita.
 
-**Posso usar outro algoritmo além dos vistos em aula?** Pode, como comparação
-adicional, desde que os três algoritmos obrigatórios de cada estágio sejam da
-disciplina.
+Não há consulta de internet durante a conversa. Sem cardápio com data e campus
+comprovados na base, o bot orienta consulta a
+https://proaes.ufms.br/category/restaurante-universitario/.
+Planejamento não comprova o que foi servido. PDFs semanais e relatórios de pesquisa
+ficam fora do corpus ativo. Pix/cartões são relato do grupo, sem confirmação
+institucional; ausência de documentação não prova inexistência de créditos.
 
-**Posso usar o LLM para classificar?** Só como **comparação** opcional
-(`chatbot.llm.ClassificadorLLM`). O bot entregue usa os classificadores treinados.
+Veja [RAG_OPENROUTER.md](docs/RAG_OPENROUTER.md) e a
+[integração 10B](docs/AUDITORIA_INTEGRACAO_DOSSIE_2026.md).
+`resultados/rag_10_offline.json` preserva oito documentos/77 trechos anteriores
+à 10B; não descreve o tamanho atual do corpus.
 
-**Posso usar embeddings pré-treinados?** Pode, nos classificadores
-(`EmbeddingsSentenca`) e/ou na busca (`conhecimento.representacao: embeddings`),
-após `pip install -r requirements-extra.txt`. Se usar no modelo final, copie a
-dependência para o `requirements.txt`.
+## Instalação e conversa
 
-**Quanto custa o LLM?** Com os modelos baratos indicados, centenas de mensagens
-custam centavos de dólar. A chave tem um limite de créditos definido pelo professor;
-os scripts mostram, ao final, quantas chamadas e tokens foram gastos. Evitem laços
-que chamem o LLM milhares de vezes (por exemplo, avaliar o `ClassificadorLLM` em
-todo o treino).
+Requisito declarado: Python >= 3.10. Modelos salvos com Python **3.12.13** e
+scikit-learn **1.9.1**. Para reprodução, conferir as demais versões em
+`resultados/classificadores_08/metadados.json`: `requirements.txt` contém
+intervalos, não lock completo. Não resolver incompatibilidade retreinando os
+modelos congelados neste checkout.
 
-**Mudei um documento. Preciso fazer algo?** Não: o índice em `.vectordb/` é recriado
-automaticamente na próxima conversa.
+Comandos para o responsável em terminal autorizado:
 
-**O verificador acusa erro no exemplo da biblioteca.** É esperado: o exemplo é
-pequeno e todo gerado por LLM, de propósito. Os mínimos valem para o trabalho do
-grupo.
+```bash
+git clone https://github.com/JhonnPA/chatbot-ru-ufms.git
+cd chatbot-ru-ufms
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -B -m unittest discover -s tests
+```
 
----
+A partir da raiz, conversa offline e busca sem chave:
 
-## Créditos
+```bash
+.venv/bin/python -B scripts/conversar.py --sem-llm --depurar
+.venv/bin/python -B scripts/indexar_documentos.py --forcar
+.venv/bin/python -B scripts/indexar_documentos.py --buscar 'Posso repetir arroz e feijão no RU?' --intencao regras_uso
+```
 
-* Exemplo da biblioteca: frases e documentos escritos para este trabalho
-  (universidade fictícia).
-* MASSIVE (opcional, via `scripts/baixar_massive.py`): FitzGerald, J. et al.
-  *MASSIVE: A 1M-Example Multilingual Natural Language Understanding Dataset with 51
-  Typologically-Diverse Languages*. ACL 2023. Licença CC BY 4.0.
+O modelo de redação é `openai/gpt-6-luna`, via OpenRouter. Em terminal privado
+fora do Codex, fornecer a chave somente ao processo conforme o procedimento de
+entrada oculta em [RAG_OPENROUTER.md](docs/RAG_OPENROUTER.md) e iniciar:
+
+```bash
+.venv/bin/python -B scripts/conversar.py --depurar
+```
+
+Cleiton confirmou testes manuais reais com GPT-6 Luna e sem LLM. Isso não é
+avaliação oficial nem prova de acerto universal. Conferir a fonte da resposta e
+uso de chamadas: fallback fixo não comprova sucesso da API. Nenhuma chamada real
+foi executada pelo Codex na Missão 11A.
+
+## Reprodução do notebook
+
+O notebook treina, busca hiperparâmetros e **regrava os modelos**. Por isso ele
+se recusa a rodar dentro de um checkout git (proteção dos modelos congelados) e
+deve ser executado numa cópia gerada por `git archive`, como a do ZIP de entrega.
+Antes do A1, `validar_modelos_reproduzidos()` exige scikit-learn 1.9.1 e confere
+configuração, classes, predições e probabilidades dos modelos re-serializados
+contra os oficiais; diferenças de bytes do `.joblib` entre ambientes são esperadas.
+
+```bash
+mkdir /tmp/rangot-repro
+git archive HEAD | tar -x -C /tmp/rangot-repro
+cd /tmp/rangot-repro
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m ipykernel install --prefix .venv --name rangot --display-name 'Python (RANGOT)'
+.venv/bin/python -m nbconvert --to notebook --execute \
+  --ExecutePreprocessor.kernel_name=rangot \
+  --ExecutePreprocessor.timeout=1800 \
+  --output 01_trabalho_grupo_reproduzido.ipynb \
+  notebooks/01_trabalho_grupo.ipynb
+```
+
+Resultado registrado na Missão 11B: 22/22 células sem erro e métricas 08/09
+reproduzidas com diferença máxima 0,0 ([detalhes](docs/REPRODUTIBILIDADE_11B.md)).
+Não usar o teste para escolher modelos, corrigir dados ou ajustar limiar.
+
+## Limitações e rastreabilidade
+
+- Frases vagas e mensagens com duas intenções podem receber classe única: o limiar
+  não garante detectar ambiguidade. Pergunta genérica sobre subsídio sem mencionar
+  RU não é falso negativo confirmado por si só.
+- `integracao_ficticios.csv` da Missão 09 contém erros históricos e respostas
+  fixas. `rag_10_offline.json` combina classificadores controlados/modelos reais
+  com LLM simulado; seu campo `llm` não comprova chamada remota.
+- Faltam evidências completas de geração de **158 exemplos LLM**: 157 da base
+  original e `G07G:003`. Isso difere da revisão humana dos exemplos, confirmada
+  por Cleiton em 19/11/2026. Não inventar prompts ou ferramenta geradora.
+- Persistem lacunas sobre endereço específico do RU, integral de Campo Grande,
+  pagamentos oficiais, horários CPAQ/CPAN e condutas sem norma local.
+- Configuração persistida `xhigh` e declaração retrospectiva High do Codex são
+  evidências distintas; o arquivo não comprova o modo efetivo de cada sessão.
+
+## Estrutura
+
+```text
+grupo.yaml                  configuração, intenções, respostas e limiar
+chatbot/                    classificadores, grafo, recuperação e cliente LLM
+scripts/                    conversa, indexação e experimentos
+dados/                      conjuntos congelados e proveniência
+documentos/                 dez fontes ativas e catálogo
+modelos/                    pipelines e versões preservados
+notebooks/01_trabalho_grupo.ipynb
+resultados/classificadores_08/
+resultados/aprofundamento_09/
+docs/                       contratos, protocolos, auditorias e procedimentos
+referencias/_brutos/         originais e pesquisa; não é corpus ativo
+relatorio/                  destino do artigo SBC, ainda a concluir
+USO_DE_IA.md                 histórico e confirmações posteriores
+LINKS.txt                   vídeo e repositório da entrega
+```
+
+Arquivos privados de revisão/pesquisa e caches não devem entrar em commits ou ZIP.
+
+## Segurança e fechamento acadêmico
+
+Não guardar credenciais no checkout do Codex nem publicá-las em código, notebook,
+logs, prints, histórico ou ZIP. Não enviar chaves pela conversa. O agente não
+acessa segredos, variáveis de credenciais ou Keychain. Em exposição, solicitar
+revogação ao responsável/professor antes de novo uso.
+
+CSV, modelos e scripts oficiais são protegidos. Somente depois de resolver a
+reprodução, concluir decisões, congelar a versão e obter autorização expressa
+para a etapa final, em cópia sem segredos:
+
+```bash
+# Etapa final futura; não executar como teste preliminar.
+.venv/bin/python -B scripts/avaliar.py
+.venv/bin/python -B scripts/verificar_entrega.py
+```
+
+A avaliação é **única**, sem LLM. O verificador também acessa o teste: não serve
+para ciclos exploratórios. O professor calcula C7 em conjunto combinado, não
+apenas no teste local. Qualquer erro do verificador ou bot não executável zera
+C7 e C11 conforme o enunciado. Não há nota garantida; esses comandos não foram executados
+na Missão 11A.
+
+Antes da submissão: artigo SBC em `relatorio/relatorio.pdf`, até dez páginas;
+vídeo até dez minutos, todos os integrantes e pelo menos 30 segundos declarando IA.
+`video:` em `LINKS.txt` fica vazio até existir URL verdadeira e acessível; preencher
+também a nota de rodapé na conclusão do artigo. O repositório é
+https://github.com/JhonnPA/chatbot-ru-ufms e deve corresponder à versão final
+auditada/aprovada. O ZIP é a versão efetivamente avaliada: usar `git archive`
+apenas após os commits finais aprovados e inspecionar nomes de arquivos.
+Nenhum artigo, vídeo, commit ou ZIP foi produzido na Missão 11A.
+
+O histórico de IA deve ser levado ao artigo e vídeo, conforme
+[USO_DE_IA.md](USO_DE_IA.md). Pendências e evidências: [Missão 11A](docs/MISSAO_11A.md).

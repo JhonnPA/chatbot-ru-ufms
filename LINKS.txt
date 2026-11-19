@@ -1,4 +1,2 @@
-# Links da entrega - preencha depois de publicar o vídeo.
-# O vídeo deve ser público ou "não listado" (YouTube) / aberto a quem tem o link (Drive).
-video: 
-repositorio: 
+video:
+repositorio: https://github.com/JhonnPA/chatbot-ru-ufms
