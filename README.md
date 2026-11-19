@@ -3,13 +3,15 @@
 Trabalho Prático de Inteligência Artificial, FACOM/UFMS, 2026/2, professor Bruno
 M. Nogueira. O RANGOT informa sobre o RU, reconhece conversa social, recusa
 pedidos fora do domínio e pede esclarecimento quando a intenção tem baixa
-confiança. A autoridade é o [enunciado original](referencias/_brutos/enunciado_professor.pdf).
+confiança. A autoridade é o enunciado original do professor (PDF de 29 páginas
+distribuído aos grupos; não versionado neste repositório).
 
 **Estado em 19/11/2026:** dados/modelos congelados, experimentos 08/A1 armazenados
-e RAG integrado. A auditoria independente relatou falha de reprodução integral
-do notebook, pendente de diagnóstico em cópia isolada. Artigo, vídeo, avaliação
-e verificação final não são declarados concluídos. A Missão 11A é documental:
-não reexecuta experimentos nem altera modelos ou arquitetura.
+e RAG integrado. A falha de reprodução integral do notebook apontada pela auditoria
+independente foi corrigida na Missão 11B: execução integral aprovada (22/22 células)
+em cópia `git archive`, com métricas 08/09 reproduzidas sem diferença; veja
+[REPRODUTIBILIDADE_11B.md](docs/REPRODUTIBILIDADE_11B.md). `verificar_entrega.py`:
+0 erros. Artigo, vídeo e avaliação final ainda não estão concluídos.
 
 ## Escopo e arquitetura
 
@@ -69,7 +71,7 @@ e custos explícitos, sem teste; seleção e descrição nos mesmos OOF têm lim
 - Resultados: `resultados/classificadores_08/` e `resultados/aprofundamento_09/`,
   com tabelas, matrizes, curvas, parâmetros e metadados.
 - Notebook: [01_trabalho_grupo.ipynb](notebooks/01_trabalho_grupo.ipynb), com saídas
-  históricas preservadas; sua presença não comprova reprodução integral por kernel limpo.
+  saídas da execução integral aprovada na Missão 11B (ver seção de reprodução abaixo).
 - Metodologia: [experimentos](docs/EXPERIMENTOS_CLASSIFICADORES.md),
   [A1](docs/APROFUNDAMENTO_A1.md) e [Missão 11A](docs/MISSAO_11A.md).
 
@@ -133,19 +135,21 @@ avaliação oficial nem prova de acerto universal. Conferir a fonte da resposta 
 uso de chamadas: fallback fixo não comprova sucesso da API. Nenhuma chamada real
 foi executada pelo Codex na Missão 11A.
 
-## Reprodução do notebook — pendência para a Missão 11B
+## Reprodução do notebook
 
-A auditoria Claude relatou falha de execução integral em ambiente isolado.
-Causa detalhada/traceback não fornecidos nesta missão; não se declara correção
-ou sucesso de reprodução. O notebook contém treinamento, busca e gravação de
-modelos: **não executá-lo no checkout dos artefatos congelados**. A Missão 11A
-não autoriza esses procedimentos.
-
-Após autorização específica, preparar cópia isolada, sem segredos, do commit
-aprovado e usar as versões registradas. Nessa cópia, registrar kernel, traceback
-e diferenças, preservando o original. Comandos para essa etapa futura:
+O notebook treina, busca hiperparâmetros e **regrava os modelos**. Por isso ele
+se recusa a rodar dentro de um checkout git (proteção dos modelos congelados) e
+deve ser executado numa cópia gerada por `git archive`, como a do ZIP de entrega.
+Antes do A1, `validar_modelos_reproduzidos()` exige scikit-learn 1.9.1 e confere
+configuração, classes, predições e probabilidades dos modelos re-serializados
+contra os oficiais; diferenças de bytes do `.joblib` entre ambientes são esperadas.
 
 ```bash
+mkdir /tmp/rangot-repro
+git archive HEAD | tar -x -C /tmp/rangot-repro
+cd /tmp/rangot-repro
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m ipykernel install --prefix .venv --name rangot --display-name 'Python (RANGOT)'
 .venv/bin/python -m nbconvert --to notebook --execute \
   --ExecutePreprocessor.kernel_name=rangot \
@@ -154,9 +158,9 @@ e diferenças, preservando o original. Comandos para essa etapa futura:
   notebooks/01_trabalho_grupo.ipynb
 ```
 
-Uma CLI experimental não substitui a execução integral do notebook. Não usar o
-teste para escolher modelos, corrigir dados ou ajustar limiar. Nesta missão,
-o teste é conferido somente por hash.
+Resultado registrado na Missão 11B: 22/22 células sem erro e métricas 08/09
+reproduzidas com diferença máxima 0,0 ([detalhes](docs/REPRODUTIBILIDADE_11B.md)).
+Não usar o teste para escolher modelos, corrigir dados ou ajustar limiar.
 
 ## Limitações e rastreabilidade
 
