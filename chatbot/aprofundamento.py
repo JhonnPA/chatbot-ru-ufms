@@ -38,16 +38,80 @@ CASOS_FICTICIOS = [
 ]
 
 
-def referencias(raiz):
+def referencias(raiz, modelos_esperados=None):
+    """Integridade binária: padrão oficial ou snapshot de reprodução já validado.
+
+    O notebook obtém o segundo por ``validar_modelos_reproduzidos``; não há
+    descoberta automática que aceite quaisquer arquivos presentes no disco.
+    """
     raiz = Path(raiz)
+    modelos = MODELOS_08 if modelos_esperados is None else dict(modelos_esperados)
+    if set(modelos) != set(MODELOS_08) or any(
+            not isinstance(h, str) or len(h) != 64 or any(c not in "0123456789abcdef" for c in h)
+            for h in modelos.values()):
+        raise ValueError("Snapshot deve conter os SHA-256 dos dois modelos")
     nomes = list(HASHES_DADOS) + list(MODELOS_08) + [
         "scripts/avaliar.py", "scripts/verificar_entrega.py", "chatbot/avaliacao.py", "modelos/versoes.json"]
     nomes += [str(p.relative_to(raiz)) for p in sorted((raiz / "resultados/classificadores_08").glob("*")) if p.is_file()]
     obtidos = {n: sha256(raiz / n) for n in nomes}
-    for n, h in (HASHES_DADOS | MODELOS_08).items():
+    for n, h in (HASHES_DADOS | modelos).items():
         if obtidos[n] != h:
             raise ValueError(f"Referência experimental divergente: {n}")
     return obtidos
+
+
+def validar_modelos_reproduzidos(raiz, oficiais, metadados):
+    """Valida a nova serialização sem confundir equivalência com identidade binária.
+
+    ``oficiais`` são os objetos carregados e autenticados antes do treino, na
+    cópia isolada. As sondas usam somente treino e ficção; equivalência nestas
+    entradas não é prova de igualdade funcional para todos os textos possíveis.
+    """
+    from importlib.metadata import version
+    from sklearn.pipeline import Pipeline
+
+    if version("scikit-learn") != "1.9.1":
+        raise ValueError("Reprodução exige scikit-learn 1.9.1")
+    if metadados["seed"] != SEED or metadados["folds"] != 5:
+        raise ValueError("Protocolo da reprodução divergente")
+    for nome, h in HASHES_DADOS.items():
+        if metadados["hashes_entrada"].get(nome) != h:
+            raise ValueError(f"Dados de reprodução divergentes: {nome}")
+    config, dados, _ = preparar(raiz)
+    novos = carregar_classificadores(config)
+    if len(oficiais) != 2:
+        raise ValueError("São necessários os dois modelos oficiais pré-execução")
+    esperados = {"modelos/escopo.joblib": metadados["contratos_modelos"]["sha256_escopo"],
+                 "modelos/tema.joblib": metadados["contratos_modelos"]["sha256_tema"]}
+    referencias(raiz, modelos_esperados=esperados)
+    for etapa, anterior, novo, classes, C in zip(
+            ("escopo", "tema"), oficiais, novos,
+            (CLASSES_ESCOPO, config.nomes_intencoes), (1., .1)):
+        escolhido = metadados["selecionados"][etapa]
+        parametro = {"calibrado__estimator__classificador__C": C}
+        if (escolhido["algoritmo"] != "svm_calibrada" or escolhido["representacao"] != "caracteres"
+                or json.loads(escolhido["parametros"]) != parametro):
+            raise ValueError(f"Decisão científica divergente: {etapa}")
+        esperado, _ = candidato("svm_calibrada", "caracteres")
+        esperado.set_params(**parametro)
+        for modelo in (anterior, novo):
+            checar_interface(modelo, classes, etapa)
+            if not isinstance(modelo, Pipeline) or joblib.hash(clone(modelo)) != joblib.hash(esperado):
+                raise ValueError(f"Configuração do pipeline divergente: {etapa}")
+        np.testing.assert_array_equal(novo.classes_, anterior.classes_)
+        sub = dados if etapa == "escopo" else dados.loc[dados["escopo"].eq(DOMINIO)]
+        sondas = sub["texto"].tolist() + ["EXEMPLO FICTÍCIO cristal orbital", "EXEMPLO FICTÍCIO prisma violeta"]
+        pred = novo.predict(sondas)
+        proba = novo.predict_proba(sondas)
+        if (proba.shape != (len(sondas), len(classes)) or not np.isfinite(proba).all()
+                or np.any(proba < 0) or np.any(proba > 1)):
+            raise ValueError(f"Probabilidades inválidas: {etapa}")
+        np.testing.assert_allclose(proba.sum(axis=1), 1., atol=1e-12, rtol=0)
+        np.testing.assert_array_equal(pred, anterior.predict(sondas))
+        np.testing.assert_array_equal(pred, novo.classes_[np.argmax(proba, axis=1)])
+        np.testing.assert_allclose(proba, anterior.predict_proba(sondas), atol=1e-10, rtol=0)
+    referencias(raiz, modelos_esperados=esperados)
+    return esperados
 
 
 def _melhor_indice(r):
@@ -87,10 +151,10 @@ def metricas_rotas(real, predito, intencoes):
         "taxa_falsa_recusa": float(np.sum(dominio & np.isin(predito, [CHITCHAT, FORA_DOMINIO])) / max(1, np.sum(dominio)))}
 
 
-def comparar(raiz):
+def comparar(raiz, modelos_esperados=None):
     """Cinco folds externas comuns, estratificadas nas oito classes originais."""
     config, dados, _ = preparar(raiz)
-    refs = referencias(raiz)
+    refs = referencias(raiz, modelos_esperados=modelos_esperados)
     ref_escopo, ref_tema = carregar_classificadores(config)
     checar_interface(ref_escopo, CLASSES_ESCOPO, "escopo")
     checar_interface(ref_tema, config.nomes_intencoes, "tema")
@@ -170,7 +234,7 @@ def comparar(raiz):
                 "tema_correto_mas_bloqueado_pelo_escopo": int((dom & ~passou & certo_tema).sum()),
                 "dominio_passou_mas_tema_errou": int((dom & passou & ~certo_tema).sum()),
                 "n_nao_dominio": int((~dom).sum()), "nao_dominio_encaminhado_ao_tema": int((~dom & passou).sum())})
-    if referencias(raiz) != refs:
+    if referencias(raiz, modelos_esperados=modelos_esperados) != refs:
         raise ValueError("Referências 08 ou dados alterados")
     return {"resumo": pd.DataFrame(resumo), "folds": tabela_folds, "predicoes": predicoes,
         "matrizes": pd.DataFrame(matrizes), "propagacao": pd.DataFrame(propagacao),
@@ -319,8 +383,8 @@ def resumo_cientifico(resumo, propagacao, limiares, custos, integracao, limiar):
     return "\n".join(linhas) + "\n"
 
 
-def executar_memoria(raiz):
-    r = comparar(raiz)
+def executar_memoria(raiz, modelos_esperados=None):
+    r = comparar(raiz, modelos_esperados=modelos_esperados)
     config, _, _ = preparar(raiz)
     limiares = tabela_limiares(r["predicoes"], config.nomes_intencoes)
     limiar = selecionar_limiar(limiares)
@@ -346,6 +410,7 @@ def executar_memoria(raiz):
         "criterio": "Minimizar custo OOF; desempate por mais acertos diretos e menor limiar. Custos declarados antes da execução.",
         "limitacoes": "Familia/representacao escolhidas na 08 com este treino; CV interna adicional so para C nao remove todo vies de selecao anterior. Familias/autores podem atravessar folds. Limiar escolhido e descrito nos mesmos OOF: diagnostico otimista, sem estimativa independente de sua politica. Custos sao decisao interna, nao regra do professor. Tempos batch em amostra pequena e referencia com tempo de refit apenas adicional nao sao benchmark de producao.",
         "referencias_08_e_dados": r["referencias"], "avaliacao_oficial_executada": False,
+        "origem_referencia_modelos": "08_oficial" if modelos_esperados is None else "08_reproduzida_validada",
         "melhor_a1": r["resumo"].loc[r["resumo"]["arquitetura"].ne("cascata_referencia_08")].sort_values("f1_macro_media", ascending=False).iloc[0]["arquitetura"],
         "integracao": "construir_grafo(config, clf_escopo, clf_tema), sem LLM, com limiar selecionado; ficticios fixados antes dos resultados"}
     from importlib.metadata import version
@@ -357,7 +422,7 @@ def executar_memoria(raiz):
     meta["tempo_inferencia"] = "Diagnostico batch calcula tema em todos os exemplos; nao e latencia de producao"
     meta["sha256_artefatos"] = {n: hashlib.sha256(t.encode()).hexdigest() for n, t in arquivos.items()}
     arquivos["metadados.json"] = json.dumps(meta, ensure_ascii=False, indent=2) + "\n"
-    if referencias(raiz) != r["referencias"]:
+    if referencias(raiz, modelos_esperados=modelos_esperados) != r["referencias"]:
         raise AssertionError("Dados, modelos 08 ou resultados 08 alterados")
     return {"arquivos": arquivos, "metadados": meta}
 
