@@ -1,5 +1,29 @@
 # Prompts e proveniência da geração sintética — RANGOT
 
+## Confirmações posteriores e lacunas de geração — Missão 11A
+
+Em 19/11/2026, Cleiton Pinheiro Rodrigues reiterou a revisão dos dados humanos
+utilizados, das decisões de curadoria e dos exemplos sintéticos incorporados,
+incluindo as 124 frases 07E e `G07G:003`. A confirmação é posterior aos registros
+históricos abaixo; a data original de cada revisão não foi informada. As antigas
+pendências de aprovação desses exemplos não representam o estado atual.
+Não se atribui autoria humana à geração: suas origens permanecem `llm`.
+
+| Parte do treino final | Quantidade | Evidência disponível | Limitação de geração |
+|---|---:|---|---|
+| Base sintética original | 157 | IDs `S...` nos manifestos privados 07B/07C/07G, textos na fonte original e nos conjuntos; origem LLM declarada pelo responsável e revisão humana confirmada | Ferramenta, modelo, prompts integrais e condições originais não recuperados. A base bruta tem 132 linhas com múltiplas respostas, não 132 frases. |
+| Complemento 07D incorporado | 124 | Registro privado `REGISTRO_GERACAO_07D.md`, prompt/anexo transcritos abaixo, ChatGPT/GPT-6 declarado e modo High confirmado retrospectivamente | Build/amostragem e comprovação técnica de isolamento físico/virtual ausentes; a frase G07D:013 continua excluída. |
+| Selecionada 07G | 1 | `G07G:003`, linha 4 de candidatas_regras_07g.csv e linha 551 de treino.csv incluindo cabeçalho; texto idêntico, regras_uso/llm; revisão humana posterior confirmada em 19/11/2026 | Ferramenta, modelo, prompt e condições da geração das cinco candidatas não recuperados; o prompt de curadoria não é prompt de geração. |
+
+Assim, **158 das 282 frases LLM** têm rastreabilidade de geração incompleta;
+isso não é pendência de revisão humana dos exemplos utilizados. A identificação
+retrospectiva de Cleiton como operador de ChatGPT/GPT-6 High e Codex/GPT-6.1-Sol
+High não identifica automaticamente o gerador de cada lote. Nenhum prompt foi
+reconstruído. Não se comprovou impossibilidade definitiva de recuperar os
+registros; eles não foram localizados entre os materiais examinados nesta missão.
+Os manifestos privados anteriores permanecem snapshots históricos, sem reescrita
+de seus campos de revisão. Confirmações: entrada 30 de `../USO_DE_IA.md`.
+
 ## Geração complementar 07D e conferência 07E
 
 - Ferramenta: **ChatGPT**, interação textual; o registro relata Python 3 para escrita e validação dos arquivos.
@@ -16,7 +40,7 @@
 
 A curadoria assistida por Codex da Missão 07E examinou individualmente os 125 textos e recomenda 124 como adequados. A candidata G07D:013 foi separada por forte proximidade semântica com S0087:C07, já pertencente ao treino, para decisão do responsável. Nenhum rótulo foi corrigido por comparação com o teste. Não houve duplicatas normalizadas ou interseções normalizadas com treino/teste, nem sinais no detector existente de proximidade entre novas frases e teste. Esses controles não garantem detectar toda paráfrase semântica.
 
-A conferência final humana sobre as 125 candidatas permanece pendente. O treino proposto privado tem 549 exemplos, 268 humanos e 281 LLM (48,82% humano), faltando uma frase de regras_uso. O CSV oficial completo não foi materializado. Se o responsável aceitar a distinção do caso sinalizado, a projeção é 550 e 48,73% humano. Não houve treinamento ou avaliação final.
+Naquela etapa, a conferência final humana sobre as 125 candidatas permanecia pendente. O treino proposto privado tinha 549 exemplos, 268 humanos e 281 LLM (48,82% humano), faltando uma frase de regras_uso; o CSV oficial completo ainda não fora materializado. A projeção então discutida era 550 e 48,73% humano. A confirmação posterior das 124 efetivamente utilizadas e de G07G:003 está na atualização 11A acima; G07D:013 permaneceu excluída. Não houve treinamento ou avaliação final na 07E.
 
 O registro não esclarece ferramenta/modelo/prompts da geração sintética anterior das 132 linhas; essa pendência histórica permanece. Os exemplos fictícios de testes de software não são dados científicos.
 
@@ -185,7 +209,9 @@ do arquivo), sobre usar caixinha de som durante o almoço no RU. A intenção de
 conduta e o domínio são explícitos; não se identificou paráfrase trivial no treino
 nem sinal de contaminação. As outras quatro ficaram fora do conjunto final.
 A decisão é curadoria assistida por IA sob autorização expressa, sem confirmação
-de revisão manual individual do grupo. G07D:013 continua excluída.
+de revisão manual individual do grupo registrada naquela etapa. A confirmação
+posterior de Cleiton para a selecionada está na atualização 11A acima; origem,
+texto e intenção não mudaram. G07D:013 continua excluída.
 
 O treino oficial foi materializado com 550 exemplos, 268 humanos e 282 LLM,
 48,73% humano, atendendo aos mínimos por classe. SHA-256:

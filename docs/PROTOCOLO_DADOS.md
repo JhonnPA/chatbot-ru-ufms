@@ -856,7 +856,7 @@ técnica por ID, justificativa, hash de texto e proveniência da curadoria por I
 autorizada. A geração das cinco tem origem LLM declarada pelo responsável; ferramenta,
 modelo e prompt de geração não foram fornecidos e permanecem pendentes no registro
 de IA. Não atribuir a geração dessas cinco ao modelo da 07D por suposição.
-Não houve confirmação de revisão manual individual das 124 recomendações 07E ou
+Naquela etapa, não houve confirmação de revisão manual individual das 124 recomendações 07E ou
 da nova selecionada; a autorização de curadoria técnica não foi registrada como tal revisão.
 
 `dados/treino.csv` foi efetivamente preenchido em UTF-8, separador vírgula e somente
@@ -881,6 +881,34 @@ com seleção de modelos, vetorizadores, hiperparâmetros e limiar exclusivament
 por treino/CV. A revisão humana manual não foi inventada, e as pendências de
 metadados de geração devem ser recuperadas para artigo/vídeo. Nesta missão não
 houve geração de frases, treinamento, OpenRouter, avaliação oficial ou verificador.
+
+## Confirmação retrospectiva de revisão humana — Missão 11A
+
+Em **19/11/2026**, Cleiton Pinheiro Rodrigues reiterou expressamente ter realizado
+as revisões de dados solicitadas e apresentadas pelo Codex durante a construção
+dos conjuntos: dados humanos utilizados, decisões de curadoria, 124 frases 07E
+e a candidata selecionada **G07G:003**. Não há pendência de nova aprovação dessas
+124 frases ou de G07G:003. A data histórica das revisões não foi informada;
+19/11/2026 é a data da confirmação retrospectiva.
+
+A candidata é “Dá ruim se alguém colocar música numa caixinha de som enquanto
+tá almoçando no RU?”, terceira linha de dados do lote 07G e último registro do
+treino (linha 551 incluindo cabeçalho). O vínculo entre fonte, manifesto e treino
+foi conferido sem modificar texto, posição, `intencao=regras_uso` ou `origem=llm`.
+SHA-256 do texto: `857013762edbb357fd633c4a66a0a464902fdd8aae2703b259becdbc2b098120`.
+A geração foi IA; a seleção inicial foi assistida pelo Codex; a revisão humana
+foi posterior, declarada pelo próprio responsável. Uma etapa não substitui a outra.
+
+Os registros antigos de ausência de confirmação e os manifestos privados foram
+preservados como históricos. A confirmação não aprova as 13 pendências excluídas,
+G07D:013 ou outras candidatas não utilizadas, nem implica revisão de toda a
+documentação, código ou resultados experimentais. Não houve reimportação de
+decisões, alteração dos CSVs ou nova curadoria.
+
+Permanece incompleta a proveniência geradora de 157 frases da fonte sintética
+original e da selecionada 07G: faltam vínculos de ferramenta/modelo, prompts
+originais e condições de geração. Essa lacuna é separada da revisão humana
+confirmada, conforme `dados/prompts_llm.md` e entrada 30 de `USO_DE_IA.md`.
 
 ## Evidências e próximos passos
 

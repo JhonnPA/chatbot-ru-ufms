@@ -1,5 +1,14 @@
 # A1, limiar e integração — Missão 09
 
+> **Ressalva documental — Missão 11A, 19/11/2026:** este documento descreve
+> resultados e execuções históricos, preservados. A afirmação anterior sobre
+> executabilidade do código não comprova reprodução integral por kernel limpo.
+> A auditoria independente Claude relatou falha nesse procedimento; causa e
+> traceback não foram fornecidos nesta missão. Nenhum experimento foi repetido
+> ou corrigido na 11A. Os cenários abaixo usam perguntas fictícias e respostas
+> fixas históricas, distintas dos mocks de LLM da 10 e dos testes manuais humanos.
+> Ver `MISSAO_11A.md` antes de qualquer reprodução autorizada em cópia isolada.
+
 ## Protocolo e resultados
 
 Enunciado consultado: pp. 10–11 (limiar/grafo), 23 (A1) e 25 (contratos), extraídas
