@@ -18,3 +18,5 @@ pypdf>=4.0            # leitura de PDFs da base de conhecimento
 scipy>=1.10
 jupyterlab>=4.0
 ipykernel>=6.0
+threadpoolctl>=3.1     # limitar paralelismo numérico nos experimentos
+nbconvert>=7.0        # executar/exportar o notebook reproduzível

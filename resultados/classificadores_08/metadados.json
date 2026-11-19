@@ -1,0 +1,117 @@
+{
+  "missao": "08",
+  "seed": 42,
+  "folds": 5,
+  "jobs": 1,
+  "algoritmos": [
+    "logistica",
+    "complement_nb",
+    "svm_calibrada"
+  ],
+  "representacoes": {
+    "palavras": "word (1,2)",
+    "caracteres": "char_wb (2,5)"
+  },
+  "calibracao_svm": "sigmoid; 3 folds internas; vetorizador dentro do estimador calibrado; ensemble=False",
+  "normalizacao": "chatbot.texto.normalizar; min_df=1; sublinear_tf=True; sem remoção de stopwords",
+  "metrica_principal": "f1_macro",
+  "desvio": "populacional (ddof=0), cinco folds",
+  "selecao": "F1 macro; desempate acurácia, menor desvio, ordem estável de nome/grade",
+  "python": "3.12.13",
+  "versoes": {
+    "numpy": "2.5.5",
+    "pandas": "3.1.1",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "joblib": "1.6.0",
+    "matplotlib": "3.11.2",
+    "threadpoolctl": "3.8.0"
+  },
+  "hashes_entrada": {
+    "dados/treino.csv": "fc260493bf144e3a6b5ecac2e2e7064f31b53dda597948cfc8e689fea5b665f5",
+    "dados/teste.csv": "fa760e167d565a9a3e5bd015465c4ec945f7855e0bd78b5542dc561e21ea9b81",
+    "scripts/avaliar.py": "5ee29c8f0b7aacc146706948dd26803600ad9da8b683a3d22a1a9ab64f0ddda2",
+    "scripts/verificar_entrega.py": "42bda3906b0f295603162d4d2320191327cc4f472b59ac3fd2bf874fc1feacec",
+    "chatbot/avaliacao.py": "4c40ed6d4ee3cdabf54a4b387b8085faea6a76ec93f8b7a104a29d04facb6035",
+    "grupo.yaml": "a6fa20a297110f55417660b07939b7d9e41dff2502d33f952535ce2567ae92dd"
+  },
+  "contratos_modelos": {
+    "round_trip": true,
+    "ficticios": 2,
+    "sha256_escopo": "cd33ffcb0cbdc2727e2fb7bdb3d12d2098d9d4961e5be028152832ff8134b12e",
+    "sha256_tema": "a674cbc37d89aba7130d65361584b08411840eecb8224d003ac15d83580da8ce"
+  },
+  "distribuicao_treino": {
+    "humano": {
+      "cadastro": 26,
+      "cardapio": 40,
+      "chitchat": 25,
+      "fora_dominio": 53,
+      "horarios": 34,
+      "recarga_creditos": 32,
+      "regras_uso": 26,
+      "valores": 32
+    },
+    "llm": {
+      "cadastro": 24,
+      "cardapio": 10,
+      "chitchat": 75,
+      "fora_dominio": 97,
+      "horarios": 16,
+      "recarga_creditos": 18,
+      "regras_uso": 24,
+      "valores": 18
+    }
+  },
+  "total_treino": 550,
+  "proporcao_humana": 0.48727272727272725,
+  "selecionados": {
+    "escopo": {
+      "etapa": "escopo",
+      "algoritmo": "svm_calibrada",
+      "representacao": "caracteres",
+      "f1_macro_media": 0.9228672897685202,
+      "f1_macro_desvio": 0.013299606798230144,
+      "accuracy_media": 0.9309090909090909,
+      "accuracy_desvio": 0.014770978917519955,
+      "parametros": "{\"calibrado__estimator__classificador__C\": 1.0}",
+      "segundos_busca": 1.6642105409991927
+    },
+    "tema": {
+      "etapa": "tema",
+      "algoritmo": "svm_calibrada",
+      "representacao": "caracteres",
+      "f1_macro_media": 0.9199591534831809,
+      "f1_macro_desvio": 0.024507628915550434,
+      "accuracy_media": 0.9199999999999999,
+      "accuracy_desvio": 0.02449489742783178,
+      "parametros": "{\"calibrado__estimator__classificador__C\": 0.1}",
+      "segundos_busca": 1.0397042080003303
+    }
+  },
+  "diagnostico_oof_pos_selecao": {
+    "escopo": {
+      "f1_macro_oof_agrupado": 0.9230893654149468,
+      "accuracy_oof_agrupada": 0.9309090909090909,
+      "n": 550,
+      "erros": 38,
+      "falsos_aceites": 17,
+      "falsas_recusas": 15,
+      "n_nao_dominio": 250,
+      "n_dominio": 300,
+      "taxa_falso_aceite": 0.068,
+      "taxa_falsa_recusa": 0.05
+    },
+    "tema": {
+      "f1_macro_oof_agrupado": 0.9203778393448444,
+      "accuracy_oof_agrupada": 0.92,
+      "n": 300,
+      "erros": 24
+    }
+  },
+  "limitacoes": "CV interna usada para escolher algoritmos/representacoes/hiperparametros. Medias da busca e OOF do vencedor possuem vies de selecao: nao sao estimativa independente ou teste final. Nao foi realizada CV aninhada. Familias de parafrases e autores podem atravessar folds estratificadas; nao houve agrupamento por familia/autoria, o que pode elevar os resultados. Comparacoes por origem sao descritivas, sem controle causal de classe, estilo ou dificuldade. As probabilidades OOF nao definem limiar nesta missao; A1 e limiar ficam para a Missao 09.",
+  "teste_usado": "somente SHA-256; nenhum CSV de teste carregado",
+  "avaliacao_final_executada": false,
+  "a1_executado": false,
+  "limiar_selecionado": false
+}
