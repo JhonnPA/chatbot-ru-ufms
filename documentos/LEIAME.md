@@ -32,3 +32,15 @@ O guia de composição não é um cardápio datado. Não copiar os PDFs semanais
 `referencias/_brutos/cardapios/` como documentos permanentemente vigentes, nem
 duplicar o guia bruto que já fundamenta os resumos. Pagamento é relato do grupo;
 o texto de conduta registra uma lacuna documental e não cria permissões/proibições.
+
+Na integração 10B, `regras_uso/` também contém os procedimentos de serviço do
+Guia 2026 efetivamente conferidos, sem convertê-los em regulamento integral.
+O canal permanente de cardápios contém somente orientação de consulta e limites,
+sem pratos históricos nem comandos ao LLM. O endereço físico do RU não foi
+confirmado; os contatos institucionais estão em `geral/contatos_ru.md`.
+
+Pesquisas, conflitos detalhados, matrizes e candidatos devem ficar fora de
+`documentos/`. A palavra `NAO_INDEXAR` no nome não exclui um Markdown da busca.
+O dossiê em `referencias/_brutos/dossie_integracao/` não é corpus aprovado.
+Não usar resumos de IA como se fossem originais oficiais nem interpretar sua
+data de consulta como data atual de uma conversa.

@@ -1,17 +1,13 @@
 # Formas de pagamento da refeição no RU da UFMS
 
-Proveniência: relato dos integrantes como usuários do RU de Campo Grande em
-novembro de 2026, conforme FONTES.md. Não é uma norma oficial. As formas de
-pagamento e a informação sobre ausência de recarga abaixo devem ser atribuídas
-a esse relato e confirmadas com a Proaes quando necessário.
+## Formas de pagamento e recarga — relato e limite da comprovação
 
-No Restaurante Universitário da UFMS não existe sistema de créditos nem recarga de saldo. A refeição é paga no momento da compra.
-
-## Formas de pagamento aceitas
-
-- Cartão de débito
-- Cartão de crédito
-- Pix
+Os integrantes relataram pagamento no momento da compra por Pix e cartões de
+débito ou crédito no RU de Campo Grande, em novembro de 2026, e ausência de
+recarga em sua experiência. É relato do grupo, não comprovação institucional de
+meios aceitos ou da existência ou inexistência de saldo e créditos. As fontes
+oficiais locais conferidas não documentam esses procedimentos. Para confirmar
+pagamentos e recarga na unidade, o contato é ru.proaes@ufms.br (Guia 2026, p. 4).
 
 ## Valor cobrado
 

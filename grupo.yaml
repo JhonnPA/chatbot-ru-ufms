@@ -71,11 +71,11 @@ intencoes:
   cardapio:
     descricao: "cardápio do dia ou da semana"
     resposta: >
-      Informação geral do Guia Prático do RU 2026, sem cardápio datado nesta resposta.
-      O cardápio mensal é elaborado por nutricionistas e aprovado pela Proaes. O almoço
-      e o jantar têm saladas, arroz e feijão, prato principal, guarnição e fruta, todos
-      com opção vegetariana. O café da manhã tem bebidas quentes, pão, ovo mexido e fruta.
-      Não há cardápio específico para alergias: consulte o nutricionista do RU.
+      Não tenho nesta base um cardápio oficial com data e campus confirmados para
+      informar os pratos do dia. Para café da manhã, almoço e jantar, consulte
+      https://proaes.ufms.br/category/restaurante-universitario/ e confira a unidade
+      e as datas da publicação. O cardápio publicado é planejamento; esta conversa
+      não confirma o que foi efetivamente servido.
   horarios:
     descricao: "horários de funcionamento"
     resposta: >
@@ -91,10 +91,10 @@ intencoes:
   recarga_creditos:
     descricao: "recarga de créditos e formas de pagamento"
     resposta: >
-      Segundo relato dos integrantes do grupo no RU de Campo Grande, em novembro de
-      2026, a refeição é paga na hora, no cartão de débito, no cartão de crédito ou por Pix.
-      Não há sistema de créditos nem recarga. Em caso de cobrança indevida, escreva
-      para ru.proaes@ufms.br.
+      Há relato dos integrantes de pagamento por Pix e cartões no RU de Campo Grande,
+      em novembro de 2026, mas a documentação oficial disponível não confirma esses
+      meios nem a existência ou inexistência de créditos e recarga. Para verificar
+      o procedimento atual na unidade, consulte ru.proaes@ufms.br.
   cadastro:
     descricao: "cadastro e acesso ao RU"
     resposta: >
@@ -104,9 +104,11 @@ intencoes:
   regras_uso:
     descricao: "regras de uso do RU"
     resposta: >
-      O RU atende estudantes de graduação, mestrado, doutorado e residência, servidores
-      e visitantes da UFMS. Para outras dúvidas sobre regras de uso, consulte a Proaes
-      pelo e-mail ru.proaes@ufms.br.
+      O Guia Prático 2026 descreve saladas, arroz e feijão servidos à vontade e porções
+      de proteína, guarnição e sobremesa servidas uma vez. Isso não é um regulamento
+      completo de conduta nem confirma permissão para marmita ou outras práticas.
+      Para regras sem comprovação e dúvidas sobre alergias, consulte a Proaes em
+      ru.proaes@ufms.br e o nutricionista responsável.
 
 # Respostas dos nós que não são intenções. {assuntos} vira a lista de descrições
 # das intenções; {opcao1}/{opcao2}, as duas intenções mais prováveis.
