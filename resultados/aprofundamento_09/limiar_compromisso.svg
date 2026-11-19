@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440">
+<style>text{font:14px sans-serif;fill:#203240}.axis{stroke:#52636f;fill:none}.grid{stroke:#dce4e8}</style>
+<title>Limiar de tema — compromisso entre cobertura, erros e esclarecimento</title><rect width="1000" height="440" fill="white"/>
+<text x="500" y="28" text-anchor="middle" style="font-size:19px">Limiar de tema — compromisso entre cobertura, erros e esclarecimento</text>
+<line x1="70.000" y1="335.000" x2="420.000" y2="335.000" class="grid"/>
+<text x="62" y="340" text-anchor="end">0.00</text>
+<line x1="70.000" y1="275.000" x2="420.000" y2="275.000" class="grid"/>
+<text x="62" y="280" text-anchor="end">87.50</text>
+<line x1="70.000" y1="215.000" x2="420.000" y2="215.000" class="grid"/>
+<text x="62" y="220" text-anchor="end">175.00</text>
+<line x1="70.000" y1="155.000" x2="420.000" y2="155.000" class="grid"/>
+<text x="62" y="160" text-anchor="end">262.50</text>
+<line x1="70.000" y1="95.000" x2="420.000" y2="95.000" class="grid"/>
+<text x="62" y="100" text-anchor="end">350.00</text>
+<text x="70.000" y="358" text-anchor="middle">0.00</text>
+<text x="157.500" y="358" text-anchor="middle">0.25</text>
+<text x="245.000" y="358" text-anchor="middle">0.50</text>
+<text x="332.500" y="358" text-anchor="middle">0.75</text>
+<text x="420.000" y="358" text-anchor="middle">1.00</text>
+<text x="245" y="66" text-anchor="middle">Quantidades OOF</text>
+<text x="245" y="383" text-anchor="middle">Limiar de tema</text>
+<line x1="280.000" y1="85.000" x2="280.000" y2="335.000" class="axis" style="stroke:#697b4c"/>
+<polyline points="70.000,306.886 140.000,306.886 157.500,306.886 175.000,306.886 192.500,307.571 210.000,307.571 227.500,309.629 245.000,313.057 262.500,317.857 280.000,320.600 297.500,321.971 315.000,322.657 332.500,324.029 350.000,326.086 367.500,328.829 385.000,330.886 402.500,332.943 420.000,335.000" fill="none" stroke="#b94c43" stroke-width="2"/>
+<polyline points="70.000,335.000 140.000,335.000 157.500,335.000 175.000,335.000 192.500,334.314 210.000,334.314 227.500,330.886 245.000,325.400 262.500,318.543 280.000,313.057 297.500,303.457 315.000,297.286 332.500,288.371 350.000,276.029 367.500,265.057 385.000,238.314 402.500,191.000 420.000,127.229" fill="none" stroke="#24608a" stroke-width="2"/>
+<polyline points="70.000,335.000 140.000,335.000 157.500,335.000 175.000,335.000 192.500,335.000 210.000,335.000 227.500,333.629 245.000,331.571 262.500,329.514 280.000,326.771 297.500,318.543 315.000,313.057 332.500,305.514 350.000,295.229 367.500,287.000 385.000,262.314 402.500,217.057 420.000,155.343" fill="none" stroke="#bc7d23" stroke-width="2"/>
+<line x1="570.000" y1="335.000" x2="920.000" y2="335.000" class="grid"/>
+<text x="562" y="340" text-anchor="end">0.00</text>
+<line x1="570.000" y1="275.000" x2="920.000" y2="275.000" class="grid"/>
+<text x="562" y="280" text-anchor="end">0.17</text>
+<line x1="570.000" y1="215.000" x2="920.000" y2="215.000" class="grid"/>
+<text x="562" y="220" text-anchor="end">0.35</text>
+<line x1="570.000" y1="155.000" x2="920.000" y2="155.000" class="grid"/>
+<text x="562" y="160" text-anchor="end">0.52</text>
+<line x1="570.000" y1="95.000" x2="920.000" y2="95.000" class="grid"/>
+<text x="562" y="100" text-anchor="end">0.70</text>
+<text x="570.000" y="358" text-anchor="middle">0.00</text>
+<text x="657.500" y="358" text-anchor="middle">0.25</text>
+<text x="745.000" y="358" text-anchor="middle">0.50</text>
+<text x="832.500" y="358" text-anchor="middle">0.75</text>
+<text x="920.000" y="358" text-anchor="middle">1.00</text>
+<text x="745" y="66" text-anchor="middle">Custo médio declarado</text>
+<text x="745" y="383" text-anchor="middle">Limiar de tema</text>
+<line x1="780.000" y1="85.000" x2="780.000" y2="335.000" class="axis" style="stroke:#697b4c"/>
+<polyline points="570.000,210.948 640.000,210.948 657.500,210.948 675.000,210.948 692.500,212.195 710.000,212.195 727.500,215.935 745.000,221.545 762.500,230.896 780.000,235.883 797.500,230.896 815.000,228.403 832.500,224.039 850.000,219.675 867.500,220.922 885.000,205.961 902.500,171.052 920.000,122.429" fill="none" stroke="#24608a" stroke-width="2"/>
+<text x="60" y="411" style="fill:#b94c43;font-size:12px">erros_diretos</text>
+<text x="330" y="411" style="fill:#24608a;font-size:12px">esclarecimentos</text>
+<text x="590" y="411" style="fill:#bc7d23;font-size:12px">acertos_convertidos_esclarecimento</text>
+<text x="500" y="434" text-anchor="middle" style="font-size:12px">Seleção no mesmo OOF; custo declarado antes da execução; linha vertical: limiar escolhido</text>
+</svg>

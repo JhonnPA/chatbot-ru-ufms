@@ -1,0 +1,6 @@
+fold,escopo,tema,unico,ref_reaproveita_escopo,ref_reaproveita_tema,n_treino,n_treino_tema,n_validacao
+1,"{""calibrado__estimator__classificador__C"": 0.1}","{""calibrado__estimator__classificador__C"": 1.0}","{""calibrado__estimator__classificador__C"": 10.0}",False,False,440,240,110
+2,"{""calibrado__estimator__classificador__C"": 10.0}","{""calibrado__estimator__classificador__C"": 1.0}","{""calibrado__estimator__classificador__C"": 1.0}",False,False,440,240,110
+3,"{""calibrado__estimator__classificador__C"": 1.0}","{""calibrado__estimator__classificador__C"": 1.0}","{""calibrado__estimator__classificador__C"": 0.1}",True,False,440,240,110
+4,"{""calibrado__estimator__classificador__C"": 1.0}","{""calibrado__estimator__classificador__C"": 10.0}","{""calibrado__estimator__classificador__C"": 1.0}",True,False,440,240,110
+5,"{""calibrado__estimator__classificador__C"": 1.0}","{""calibrado__estimator__classificador__C"": 1.0}","{""calibrado__estimator__classificador__C"": 1.0}",True,False,440,240,110
