@@ -1,0 +1,12 @@
+\newcommand{\ConclusaoTeste}{No teste humano local, houve 149 acertos em 160 mensagens, F1 macro de \(0{,}9499\) e sete esclarecimentos.}
+\begin{table}[!htb]\centering\small
+\caption{CV/OOF de treino e avaliação independente local. \(N\) refere-se ao teste. Ponta a ponta: OOF agregado da referência 08 com limiar; não é a média do A1 com busca interna.}
+\label{tab:independente}
+\begin{tabular}{lrcccc}\toprule
+Nível & \(N\) & F1 CV/OOF & Acurácia CV/OOF & F1 teste & Acurácia teste\\ \midrule
+Escopo & 160 & \(0{,}9229\pm0{,}0133\) & \(0{,}9309\pm0{,}0148\) & \(0{,}9633\) & \(0{,}9688\)\\
+Tema-oráculo & 90 & \(0{,}9200\pm0{,}0245\) & \(0{,}9200\pm0{,}0245\) & \(0{,}9667\) & \(0{,}9667\)\\
+Ponta a ponta, \(0{,}60\) & 160 & \(0{,}8831\) & \(0{,}8636\) & \(0{,}9499\) & \(0{,}9313\)\\
+\bottomrule\end{tabular}\end{table}
+No teste reservado, os classificadores isolados acertaram 155/160 mensagens de escopo e 87/90 de tema-oráculo. O grafo completo acertou 149/160. As taxas finais foram \(1/70=0{,}014286\) de falso aceite, \(1/90=0{,}011111\) de falsa recusa e \(7/160=0{,}04375\) de esclarecimento. A latência média registrada foi \(1{,}244327\) ms por mensagem, sem LLM; não é latência de API nem comparável diretamente ao batch do A1.
+O F1 macro oficial é a média nas oito classes reais. A rota \texttt{esclarecer} reduz a revocação da classe verdadeira, mas não entra como nona classe na média. As ponderações distintas permitem F1 maior que acurácia. Esclarecimento continua sendo divergência quando se espera uma classe específica.

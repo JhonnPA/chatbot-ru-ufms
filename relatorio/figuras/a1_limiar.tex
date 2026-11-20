@@ -1,0 +1,19 @@
+\begin{minipage}{.49\linewidth}\centering
+\begin{tikzpicture}\begin{axis}[width=\linewidth,height=4.2cm,font=\footnotesize,
+xlabel={Partição externa},ylabel={F1 macro},xmin=.8,xmax=5.2,xtick={1,2,3,4,5},ymin=.8,ymax=.93,grid=major,
+legend style={font=\footnotesize,at={(.98,.04)},anchor=south east}]
+\addplot+[black,mark=square*] coordinates { (1,0.8976980590180489) (2,0.8901018704222365) (3,0.8911027568922306) (4,0.8713707902267225) (5,0.8602518364128271) };
+\addlegendentry{Cascata}
+\addplot+[blue,mark=*] coordinates { (1,0.8997940388842228) (2,0.8991153127987476) (3,0.8484414968298989) (4,0.8893993705193215) (5,0.8888257992296718) };
+\addlegendentry{Único}
+\end{axis}\end{tikzpicture}\end{minipage}\hfill
+\begin{minipage}{.49\linewidth}\centering
+\begin{tikzpicture}\begin{axis}[width=\linewidth,height=4.2cm,font=\footnotesize,
+xlabel={Limiar},ylabel={Mensagens},xmin=0,xmax=1,ymin=0,ymax=320,grid=major,
+legend style={font=\footnotesize,at={(.02,.98)},anchor=north west}]
+\addplot+[black,mark=square*,mark size=1pt] coordinates { (0,41) (0.2,41) (0.25,41) (0.3,41) (0.35,40) (0.4,40) (0.45,37) (0.5,32) (0.55,25) (0.6,21) (0.65,19) (0.7,18) (0.75,16) (0.8,13) (0.85,9) (0.9,6) (0.95,3) (1,0) };
+\addlegendentry{Erros diretos}
+\addplot+[blue,mark=*,mark size=1pt] coordinates { (0,0) (0.2,0) (0.25,0) (0.3,0) (0.35,1) (0.4,1) (0.45,6) (0.5,14) (0.55,24) (0.6,32) (0.65,46) (0.7,55) (0.75,68) (0.8,86) (0.85,102) (0.9,141) (0.95,210) (1,303) };
+\addlegendentry{Esclarecimentos}
+\addplot[dashed,gray,forget plot] coordinates {(.6,0) (.6,320)};
+\end{axis}\end{tikzpicture}\end{minipage}

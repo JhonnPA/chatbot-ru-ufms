@@ -1,0 +1,361 @@
+\documentclass[12pt]{article}
+% Usar dentro do SBC Conferences Template oficial do Overleaf (sbc-template.sty e sbc.bst).
+\usepackage{sbc-template}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{graphicx,url,booktabs,array,amsmath}
+\usepackage{tikz,pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage[hidelinks]{hyperref}
+\sloppy
+\input{video}
+\newcommand{\VideoNaoPublicado}{}
+\title{RANGOT: classificação de escopo e intenção com\\recuperação documental para o restaurante universitário}
+\author{Cleiton Pinheiro Rodrigues\inst{1}, Jonathan Pereira do Amaral\inst{1}\\
+Felippe Baes Sales Lara\inst{1}, Gabriel Mattos de Aquino\inst{1}}
+\address{Engenharia de Software -- FACOM -- Faculdade de Computação\\
+Universidade Federal de Mato Grosso do Sul (UFMS)\\
+RGAs, na ordem de autoria: 202419060102; 202419060072;\\
+202219060141; 202419060064}
+\begin{document}
+\maketitle
+\begin{abstract}
+RANGOT is an academic chatbot about the university restaurant at UFMS.
+A scope classifier precedes a six-intent classifier; LangGraph controls routing
+and document retrieval supports language-model responses. Training comprises
+550 messages, including 268 human-written ones; the held-out test contains 160
+human messages. Five-fold cross-validation compares three algorithms and two
+representations. Calibrated character-based SVMs achieve macro-F1 scores of
+0.9229 and 0.9200. A single independent evaluation yields end-to-end macro-F1
+of 0.9499, 149 correct routes and seven clarification requests. We discuss
+the small numerical advantage of an eight-class model in training CV,
+routing errors, document authority, synthetic provenance and selection bias.
+\end{abstract}
+\begin{resumo}
+O RANGOT é um chatbot acadêmico sobre o Restaurante Universitário da UFMS.
+Um classificador de escopo antecede outro de seis intenções; LangGraph controla
+as rotas e a recuperação documental fundamenta respostas do modelo de linguagem.
+O treino contém 550 mensagens, 268 humanas, e o teste reúne 160 mensagens humanas.
+Comparam-se três algoritmos e duas representações em validação cruzada de cinco
+partições. SVMs calibradas com caracteres alcançam F1 macro de 0,9229 e 0,9200.
+Na avaliação independente única, o grafo obtém F1 macro 0,9499, 149 rotas corretas
+e sete esclarecimentos. Discutem-se a pequena vantagem numérica de um modelo
+de oito classes na CV, erros, autoridade documental, proveniência e viés de seleção.
+\end{resumo}
+
+\section{Introdução}
+Dúvidas sobre cardápio, horários, subsídio e acesso ao Restaurante Universitário
+(RU) exigem identificar o assunto e consultar fontes com públicos e vigências
+distintos. Classificação errada ou documentação antiga podem produzir orientações
+inadequadas. O RANGOT, protótipo acadêmico de Inteligência Artificial da
+FACOM/UFMS em 2026/2, investiga esses problemas.
+
+Suas contribuições são uma base curada com proveniência explícita, comparação
+de classificadores, estudo de cascata versus modelo único e política empírica de
+esclarecimento. Os classificadores determinam a rota, o LangGraph coordena a
+execução e o RAG fornece evidências ao modelo de linguagem (LLM).
+
+\section{Fundamentação}
+Na classificação supervisionada, aprende-se uma função entre textos e rótulos.
+TF-IDF pondera a frequência dos termos pela raridade na coleção; palavras e
+bigramas representam unidades lexicais, enquanto caracteres compartilham
+subsequências de abreviações e grafias variantes \cite{manning2008}.
+Isso não garante compreensão contextual.
+
+A regressão logística aprende fronteiras por perda probabilística regularizada.
+Complement Naive Bayes estima pesos pelo complemento das classes
+\cite{rennie2003}; a SVM aprende separadores de margem \cite{cortes1995}.
+Como \texttt{LinearSVC} não fornece probabilidades, utiliza-se calibração
+sigmoide com partições próprias \cite{sklearncalibration} em pipelines
+scikit-learn \cite{pedregosa2011}.
+
+Acurácia é a proporção de acertos. F1 combina precisão e revocação pela média
+harmônica; sua média macro atribui igual peso às classes. A validação cruzada
+(CV) estratificada preserva aproximadamente suas proporções, mas selecionar
+e descrever o vencedor com as mesmas partições introduz viés \cite{varma2006}.
+
+Na cascata, rejeições de escopo impedem o estágio de intenção.
+LangGraph organiza estado e transições condicionais \cite{langgraph}.
+RAG condiciona a geração a material recuperado \cite{lewis2020}.
+Aqui, TF-IDF e cosseno recuperam trechos após o roteamento; o LLM gera texto
+condicionado ao contexto. Fluência e recuperação não comprovam fidelidade factual.
+
+\section{Domínio, dados e documentos}
+As intenções são \texttt{cardapio}, \texttt{horarios}, \texttt{valores},
+\texttt{recarga\_creditos}, \texttt{cadastro} e \texttt{regras\_uso}.
+Elas formam o escopo \texttt{dominio}; \texttt{chitchat} representa conversa
+social e \texttt{fora\_dominio}, solicitações externas. O rótulo único limita
+o tratamento de perguntas compostas.
+
+O Google Forms recebeu 67 envios e 669 respostas preenchidas. A curadoria
+reservou 31 envios para teste e 36 para treino, com quarentena de sobreposições,
+antes dos experimentos. O treino tem 268 textos humanos e 282 de LLM (48,73\%
+humanos); o teste conserva 160 textos humanos originais (Tabela~\ref{tab:dados}).
+\input{tabelas/dados}
+
+Revisaram-se rótulos, ambiguidades, múltiplos pedidos, duplicatas exatas,
+normalizadas e sinais lexicais de paráfrases. Decisões delegadas ao Codex
+foram conferidas e ratificadas; treze pendências não foram aprovadas
+e uma candidata semelhante foi excluída. Revisão humana não altera autoria:
+frases sintéticas mantêm \texttt{origem=llm}.
+
+Negativos difíceis incluem biblioteca, secretaria, bolsas, matrícula e transporte,
+com vocabulário próximo ao RU. A síntese complementar
+recebeu somente treino autorizado em conversa separada; não há comprovação de
+isolamento físico. Ferramentas e prompts de 158 frases LLM (157 originais e uma
+posterior) têm registro incompleto, limitando a reprodução da geração.
+
+A base ativa tem dez documentos, oito sínteses/orientações e dois PDFs, divididos
+em 83 trechos e catalogados em \texttt{documentos/FONTES.md}.
+O Guia Prático \cite{ufmsguia} fundamenta horários, elegibilidade e serviço;
+a Resolução 399/2025 trata de assistência estudantil \cite{ufms399}, e o
+Edital 114/2026 atende ingressantes internacionais \cite{ufms114}.
+Pix e cartões são relatos atribuídos ao grupo, não normas. Sem cardápio vigente
+para data e campus, informa-se o canal oficial da PROAES.
+
+\section{Metodologia}
+\subsection{Classificadores e seleção}
+O escopo usa 550 mensagens; o tema, somente as 300 originalmente do domínio.
+Comparam-se logística, Complement NB e SVM calibrada, com TF-IDF de palavras
+$(1,2)$ ou caracteres \texttt{char\_wb} $(2,5)$. O pré-processamento usa
+minúsculas, remove acentos/pontuação e regulariza espaços; preserva stopwords,
+adota frequência sublinear e frequência documental mínima um. A normalização
+também elimina pistas de pontuação.
+
+Cinco partições estratificadas, embaralhadas com semente 42, são reutilizadas
+entre candidatos. GridSearchCV compara \(C\in\{0{,}1;1;10\}\) na logística/SVM
+e \(\alpha\in\{0{,}1;0{,}5;1\}\) no NB: 18 configurações por estágio.
+Seleciona-se F1 macro; desempates usam acurácia, menor desvio e ordem estável.
+Logística/SVM têm pesos balanceados. Médias e desvios populacionais entre
+partições não são intervalos de confiança.
+
+A calibração sigmoide envolve todo o pipeline vetorizador/SVM, com três
+partições internas e \texttt{ensemble=False}, sem ajustar vocabulário, IDF ou
+calibrador na validação. Matrizes e análises por origem usam previsões
+fora de partição (OOF) do vencedor após a busca, sujeitas ao viés de seleção.
+Os modelos finais usam todos os exemplos pertinentes.
+
+\subsection{A1, confiança e integração}
+O A1 compara cascata e modelo único de oito classes nas mesmas cinco partições
+externas estratificadas. Cada treino externo seleciona \(C\) em três partições;
+a calibração tem três partições próprias. O tema usa apenas domínio verdadeiro.
+Família e representação foram escolhidas anteriormente nesse conjunto:
+a busca interna não elimina todo o viés.
+
+Outra execução OOF usa a cascata de produção (\(C=1\) no escopo;
+\(C=0{,}1\) no tema). Entre 18 limiares, minimiza-se custo: falso aceite 5,
+intenção errada 3, esclarecimento 1, falsa recusa 2 e troca social/externo 1.
+Pesos foram declarados antes da execução, sem validação com usuários;
+empates favorecem acertos diretos e menor limiar. Seleção e descrição usam
+os mesmos OOF.
+
+O grafo solicita esclarecimento quando a confiança do tema é inferior a
+\(0{,}60\). O RAG filtra intenção e documentos gerais, usa caracteres $(3,5)$,
+trechos de cerca de 700 caracteres, até quatro resultados e cosseno mínimo 0,05.
+Fontes acompanham o contexto, separado das instruções do sistema.
+Sem LLM há respostas fixas; sem evidência, orienta-se admitir a lacuna.
+Não há consulta online durante a conversa.
+
+\subsection{Avaliação e reprodutibilidade}
+A avaliação oficial única foi executada manualmente, sem LLM, após congelar
+modelos, configuração e teste. Mede escopo nas 160 mensagens, tema-oráculo nas
+90 realmente do domínio e rota completa, além de falsas aceitações/recusas,
+esclarecimento e latência. JSON/CSV foram preservados, sem ajuste posterior.
+O teste local não é a união de conjuntos do professor para C7.
+
+Na reprodução manual, as 22 células executaram em novo kernel e cópia isolada com Python 3.12.13/scikit-learn 1.9.1. Três linhas do A1 tiveram diferença máxima de 0,0, e 39 arquivos protegidos permaneceram intactos. Os modelos reproduzidos foram validados sem substituir os oficiais. As suítes na cópia e no checkout aprovaram 160 testes cada.
+
+
+\section{Resultados}
+\subsection{Escopo e tema}
+SVM/caracteres venceu em ambos os estágios: F1 macro 0,922867 no escopo e
+0,919959 no tema, com \(C=1\) e \(C=0{,}1\), respectivamente
+(Tabela~\ref{tab:comparacao}). A diferença para logística/caracteres no tema é
+apenas 0,000416; o ranking não comprova superioridade estatística.
+Caracteres beneficiaram logística e SVM no escopo, mas não Complement NB:
+o efeito depende da combinação de algoritmo e representação.
+\input{tabelas/comparacao}
+
+\begin{figure}[!htb]
+\centering
+\input{figuras/matrizes_cv}
+\caption{Contagens OOF pós-seleção: linhas reais, colunas previstas.
+Dom/Soc/Ext: domínio/social/externo; Car/Hor/Val/Rec/Cad/Reg: cardápio,
+horários, valores, recarga, cadastro e regras. Cores relativas ao máximo de cada matriz.}
+\label{fig:matrizes}
+\end{figure}
+Na Figura~\ref{fig:matrizes}, o escopo cometeu 38 erros, incluindo 17 falsos aceites em 250 não-domínio
+(6,8\%) e 15 falsas recusas em 300 domínio (5,0\%). O tema teve 24 erros;
+horários e valores foram confundidos com cardápio três vezes cada.
+Cardápio teve F1 0,884615 e regras, 0,941176. Matrizes agregadas e médias
+por partição não são a mesma agregação.
+
+\begin{figure}[!htb]
+\centering
+\input{figuras/curvas_validacao}
+\caption{SVM/caracteres: F1 médio de treino e validação, com desvio populacional
+de cinco partições; eixo vertical de 0,80 a 1,02.}
+\label{fig:curvas}
+\end{figure}
+Aumentar \(C\) leva F1 de treino a 1,0 sem melhoria monotônica da validação
+(Figura~\ref{fig:curvas}). No tema, \(C=0{,}1\) obtém 0,919959;
+\(C=10\), 0,915927. A separação treino/validação é compatível com sobreajuste,
+sem explicar causalmente cada erro.
+
+\subsection{Cascata, modelo único e limiar}
+\input{tabelas/a1}
+No A1 (Tabela~\ref{tab:a1}), os F1 médios foram 0,882105 (cascata) e 0,885115 (único):
+vantagem de 0,003010 e um erro OOF a menos. O único venceu quatro partições,
+mas perdeu cerca de 0,0427 na terceira (Figura~\ref{fig:a1}).
+A cascata perdeu 13 perguntas no escopo; o tema isolado acertaria 11 delas.
+Outras 22 passaram e tiveram intenção errada. O único reduziu falsos aceites
+de 20 para 17 e elevou falsas recusas de 13 para 20, sem teste de significância.
+
+O único exige um pipeline; a cascata, dois. Registros históricos indicam
+ajuste de 1,246 s e 0,070 ms/mensagem batch na cascata, contra 0,920 s e
+0,037 ms no único, cujo tamanho serializado em memória foi ligeiramente maior.
+São diagnósticos amostrais; executar o tema em todo o batch não mede latência
+da rota online nem da API.
+
+\begin{figure}[!htb]
+\centering
+\input{figuras/a1_limiar}
+\caption{A1 sem limiar: F1 por partição externa (esquerda).
+Referência 08: erros diretos e esclarecimentos OOF (direita);
+linha vertical em \(0{,}60\). Escalas verticais distintas.}
+\label{fig:a1}
+\end{figure}
+Na referência 08, o limiar reduziu respostas diretas de 303 para 271 e erros
+diretos de 41 para 21: 32 esclarecimentos evitaram 20 erros e bloquearam
+12 acertos. A acurácia condicional subiu de 86,47\% para 92,25\%;
+o custo caiu de 199 para 159. Porém, a acurácia completa caiu de 0,885455
+para 0,863636; F1 agregado passou de 0,878652 para 0,883098.
+Troca-se cobertura por cautela, sem melhorar todas as métricas.
+Custos maiores para erros diretos selecionariam 0,85 na análise de sensibilidade.
+A produção mantém os dois modelos oficiais.
+
+\subsection{Avaliação independente}
+O grafo alcançou F1 macro \(0{,}949881\) e acurácia \(0{,}931250\)
+(Tabela~\ref{tab:independente}).
+\input{tabelas/avaliacao}
+
+\section{Discussão e ameaças à validade}
+\subsection{Erros e generalização}
+F1 de escopo e tema-oráculo no teste superaram a CV em 0,040426 e 0,046695.
+O ganho ponta a ponta de 0,066783 é relativo ao OOF agregado da referência 08
+com limiar, não ao estimador A1 com busca interna. O modelo único não foi
+avaliado no teste; o oráculo de 90 mensagens não representa o fluxo completo.
+Protocolos e distribuições distintos impedem inferir ganho geral, ausência de
+sobreajuste ou significância estatística.
+
+Dos 11 erros, cinco são esclarecimentos de domínio (dois cardápio, dois valores,
+um cadastro). Três tinham tema correto, com confiança entre 0,5699 e 0,5896;
+dois bloquearam tema errado. Os demais são horários$\to$cardápio,
+horários$\to$social, externo$\to$horários, externo$\to$social e dois
+esclarecimentos não-domínio (externo e social). Esses grupos são disjuntos.
+Os sete esclarecimentos podem ser conservadores na aplicação, mas divergem
+dos rótulos esperados no protocolo.
+
+“Que q vai ter no RU hj?” teve tema correto e esclarecimento (0,5699).
+“tem ru hoje?” recebeu cardápio contra horários (0,9613), e horas complementares
+recebeu horários (0,9045): confiança alta não impede erro.
+“Boia” apareceu na falsa recusa; “Bora comer no RU hj?” era social e foi
+esclarecida. Abreviações, elipses e sobreposição lexical são hipóteses,
+SEM atribuição causal. Rótulos, previsões e limiar não foram ajustados.
+
+Nos OOF de tema, humanos tiveram F1 0,939947 (\(n=190\)) e sintéticos
+0,884631 (\(n=110\)); no escopo, 0,927125 e 0,916766.
+Comprimentos médios foram 48,72 e 43,29 caracteres. Classe, estilo,
+dificuldade e seleção confundem a comparação: não houve testes isolados de origem.
+
+Coleta por conveniência e curadoria não representam frequências de uso.
+Separar envios reduz compartilhamento, mas não comprova autores únicos.
+Autores e famílias sintéticas não foram agrupados na CV; relações entre frases
+podem elevar escores, e a triagem lexical não exclui toda paráfrase.
+Reprodução exata demonstra consistência de execução, não ausência desses vieses.
+Menor dificuldade do teste é hipótese; não se extrapolam resultados a conjuntos
+ocultos. Falsos aceites arriscam orientações inadequadas, recusas reduzem utilidade
+e esclarecimentos excessivos oneram a interação. Custos não medem impacto real
+sobre estudantes; a arquitetura continua limitada a um rótulo por mensagem.
+
+\subsection{Integração e limites documentais}
+Nos dez cenários fictícios históricos do A1, houve cinco rotas esperadas entre
+oito casos de classe única: cardápio/pagamento foram para valores; cadastro,
+para esclarecimento. O caso vago foi social e o composto recebeu uma intenção.
+A Missão 10 usou componentes controlados e nove perguntas com modelos reais
+e LLM simulado. Esses registros não constituem taxa padronizada da API.
+O registro antigo de oito documentos/77 trechos antecede a base atual de dez/83.
+
+Os testes foram confirmados de forma manual com GPT-6 Luna/OpenRouter e sem LLM,
+sem estudo sistemático da geração. Recuperação pode não responder à pergunta,
+e intenção errada restringe fontes. Prompts e atribuição não garantem ausência
+de alucinações ou resistência universal a instruções maliciosas.
+
+Persistem lacunas sobre pagamento oficial, preço integral em Campo Grande,
+condutas e horários conflitantes de outros campi. Cardápio planejado não prova
+refeição servida. O chatbot não solicita senhas/documentos pessoais nem executa
+cadastros. Avaliar recuperação anotada e fidelidade com critérios humanos é
+trabalho futuro, não resultado do A1.
+
+\section{Conclusão}
+O RANGOT combina classificação em cascata, esclarecimento e recuperação documental.
+SVM/caracteres venceu a comparação; o A1 revelou pequena diferença numérica
+e propagação de erros. No OOF, o limiar reduziu erros diretos e cobertura.
+No teste humano local, houve 149 acertos em 160 mensagens,
+F1 macro de 0,9499 e sete esclarecimentos.
+A reprodução preservou os artefatos oficiais. Limitações de coleta, seleção
+e proveniência motivam estudos com controle de autorias/famílias, custos com
+usuários e fidelidade documental.
+\footnote{Vídeo: \href{https://www.youtube.com/watch?v=GYhiJRu9faM}{demonstração do RANGOT}.}
+
+\subsection*{Contribuição dos integrantes}
+\textbf{Cleiton Pinheiro Rodrigues (202419060102)} atuou em desenvolvimento,
+integração, classificadores, experimentos, A1, testes, curadoria, documentação,
+revisão humana e reprodução.
+\textbf{Jonathan Pereira do Amaral (202419060072)} atuou em desenvolvimento,
+organização e manutenção do GitHub/repositório, acompanhamento de alterações,
+análise de pull requests, revisão e aprovação de contribuições, além de auditoria
+independente da reprodução.
+\textbf{Felippe Baes Sales Lara (202219060141)} e
+\textbf{Gabriel Mattos de Aquino (202419060064)} atuaram na elaboração e revisão
+do Google Forms, divulgação da coleta e apoio à obtenção das
+respostas. Também participaram das discussões e decisões gerais do projeto,
+da análise de pull requests, da elaboração e revisão do artigo e da avaliação
+de propostas e alternativas durante o desenvolvimento do trabalho.
+
+\section*{Declaração de uso de IA generativa}
+Cleiton usou ChatGPT/GPT-6 e Codex/GPT-6.1-Sol, raciocínio High em planejamento, requisitos, código, configurações,
+curadoria, experimentos, análise, documentação e reprodução.
+O \texttt{xhigh} persistido não comprova o modo ativo de cada sessão.
+Resumos dos prompts: auditar contratos, curar sem alterar origem, comparar
+somente em treino/CV e reproduzir preservando modelos oficiais
+(\texttt{USO\_DE\_IA.md}).
+
+Decisões delegadas à IA receberam conferência humana posterior registrada
+separadamente; o teste humano não foi gerado por IA.
+Das 125 frases complementares atribuídas ao ChatGPT/GPT-6, 124 foram aproveitadas
+e uma semelhante descartada. Outra candidata completou o treino com origem LLM
+e revisão humana confirmada. Prompts recuperados estão em
+\texttt{dados/prompts\_llm.md}; ferramenta e prompts de 158 frases permanecem
+incompletos, sem reconstrução fictícia.
+
+Jonathan usou Claude/claude.ai, Opus 5.5 conforme registro, inclusive na auditoria
+que identificou a falha de reprodução; não utilizou Claude Code.
+Felippe e Gabriel utilizaram inteligência artificial como apoio na elaboração do formulário, ajudando a reformular perguntas, melhorar a clareza das respostas e sugerir novas questões e ajustes para aprimorá-lo.
+GPT-6 Luna/OpenRouter é o LLM do chatbot, distinto das ferramentas de desenvolvimento.
+
+O Codex foi utilizado como ferramenta de apoio na organização de evidências, consulta à bibliografia, elaboração de tabelas e figuras e análise dos erros. Os prompts foram direcionados ao apoio na verificação das informações e à incorporação dos resultados da avaliação realizada, sem repeti-la. A avaliação foi feita manualmente pelo grupo.
+Não houve chamadas ao OpenRouter ou acesso a credenciais nessas intervenções.
+
+A IA acelerou organização e implementação, mas sugeriu guia desatualizado,
+duplicações e confusão entre relato e norma. Foi conferida fontes,
+confirmou a curadoria e preservou erros e exclusões. Os autores respondem por compreender e revisar cada resultado.
+Análises assistidas não são apresentadas como independentes de IA.
+
+
+
+
+\bibliographystyle{sbc}
+\bibliography{referencias}
+\end{document}

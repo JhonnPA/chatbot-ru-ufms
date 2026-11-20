@@ -1,2 +1,2 @@
-video:
+video: https://www.youtube.com/watch?v=GYhiJRu9faM
 repositorio: https://github.com/JhonnPA/chatbot-ru-ufms
