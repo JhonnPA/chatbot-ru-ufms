@@ -1,0 +1,21 @@
+\begin{table}[!htb]
+\centering\small
+\caption{CV interna: médias e desvios populacionais de cinco partições. \(p\): \(C\) na logística/SVM; \(\alpha\) no Complement NB.}
+\label{tab:comparacao}
+\begin{tabular}{lllccc}
+\toprule Estágio & Algoritmo & TF-IDF & F1 macro & Acurácia & \(p\)\\ \midrule
+Escopo & SVM cal. & Carac. & \(0{,}9229\pm0{,}0133\) & \(0{,}9309\pm0{,}0148\) & 1,0\\
+Escopo & Logística & Carac. & \(0{,}9150\pm0{,}0173\) & \(0{,}9236\pm0{,}0159\) & 10,0\\
+Escopo & SVM cal. & Palav. & \(0{,}8977\pm0{,}0192\) & \(0{,}9055\pm0{,}0196\) & 10,0\\
+Escopo & Logística & Palav. & \(0{,}8664\pm0{,}0356\) & \(0{,}8855\pm0{,}0285\) & 10,0\\
+Escopo & Comp. NB & Palav. & \(0{,}8491\pm0{,}0458\) & \(0{,}8673\pm0{,}0417\) & 0,1\\
+Escopo & Comp. NB & Carac. & \(0{,}8486\pm0{,}0206\) & \(0{,}8655\pm0{,}0194\) & 0,1\\
+\midrule
+Tema & SVM cal. & Carac. & \(0{,}9200\pm0{,}0245\) & \(0{,}9200\pm0{,}0245\) & 0,1\\
+Tema & Logística & Carac. & \(0{,}9195\pm0{,}0189\) & \(0{,}9200\pm0{,}0194\) & 10,0\\
+Tema & Comp. NB & Carac. & \(0{,}9093\pm0{,}0221\) & \(0{,}9100\pm0{,}0226\) & 0,5\\
+Tema & Comp. NB & Palav. & \(0{,}8980\pm0{,}0134\) & \(0{,}9000\pm0{,}0149\) & 0,1\\
+Tema & SVM cal. & Palav. & \(0{,}8837\pm0{,}0183\) & \(0{,}8867\pm0{,}0163\) & 10,0\\
+Tema & Logística & Palav. & \(0{,}8807\pm0{,}0234\) & \(0{,}8833\pm0{,}0211\) & 10,0\\
+\bottomrule\end{tabular}
+\end{table}

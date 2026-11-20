@@ -1,0 +1,375 @@
+{
+  "grupo": "CGJ",
+  "tema": "Restaurante universitário",
+  "intencoes": [
+    "cardapio",
+    "horarios",
+    "valores",
+    "recarga_creditos",
+    "cadastro",
+    "regras_uso"
+  ],
+  "escopo": {
+    "n": 160,
+    "acuracia": 0.96875,
+    "f1_macro": 0.9632935370640289,
+    "por_classe": {
+      "dominio": {
+        "precision": 0.967391304347826,
+        "recall": 0.9888888888888889,
+        "f1-score": 0.978021978021978,
+        "support": 90.0
+      },
+      "chitchat": {
+        "precision": 0.9354838709677419,
+        "recall": 0.9666666666666667,
+        "f1-score": 0.9508196721311475,
+        "support": 30.0
+      },
+      "fora_dominio": {
+        "precision": 1.0,
+        "recall": 0.925,
+        "f1-score": 0.961038961038961,
+        "support": 40.0
+      },
+      "accuracy": 0.96875,
+      "macro avg": {
+        "precision": 0.9676250584385228,
+        "recall": 0.9601851851851851,
+        "f1-score": 0.9632935370640289,
+        "support": 160.0
+      },
+      "weighted avg": {
+        "precision": 0.9695608345021037,
+        "recall": 0.96875,
+        "f1-score": 0.968675791421693,
+        "support": 160.0
+      }
+    },
+    "rotulos": [
+      "dominio",
+      "chitchat",
+      "fora_dominio"
+    ],
+    "matriz_confusao": [
+      [
+        89,
+        1,
+        0
+      ],
+      [
+        1,
+        29,
+        0
+      ],
+      [
+        2,
+        1,
+        37
+      ]
+    ]
+  },
+  "tema_oraculo": {
+    "n": 90,
+    "acuracia": 0.9666666666666667,
+    "f1_macro": 0.9666543072549746,
+    "por_classe": {
+      "cardapio": {
+        "precision": 0.9333333333333333,
+        "recall": 0.9333333333333333,
+        "f1-score": 0.9333333333333333,
+        "support": 15.0
+      },
+      "horarios": {
+        "precision": 0.9333333333333333,
+        "recall": 0.9333333333333333,
+        "f1-score": 0.9333333333333333,
+        "support": 15.0
+      },
+      "valores": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 15.0
+      },
+      "recarga_creditos": {
+        "precision": 0.9375,
+        "recall": 1.0,
+        "f1-score": 0.967741935483871,
+        "support": 15.0
+      },
+      "cadastro": {
+        "precision": 1.0,
+        "recall": 0.9333333333333333,
+        "f1-score": 0.9655172413793104,
+        "support": 15.0
+      },
+      "regras_uso": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 15.0
+      },
+      "accuracy": 0.9666666666666667,
+      "macro avg": {
+        "precision": 0.9673611111111112,
+        "recall": 0.9666666666666667,
+        "f1-score": 0.9666543072549746,
+        "support": 90.0
+      },
+      "weighted avg": {
+        "precision": 0.9673611111111111,
+        "recall": 0.9666666666666667,
+        "f1-score": 0.9666543072549746,
+        "support": 90.0
+      }
+    },
+    "rotulos": [
+      "cardapio",
+      "horarios",
+      "valores",
+      "recarga_creditos",
+      "cadastro",
+      "regras_uso"
+    ],
+    "matriz_confusao": [
+      [
+        14,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        14,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        15,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        15,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        14,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        15
+      ]
+    ]
+  },
+  "ponta_a_ponta": {
+    "n": 160,
+    "acuracia": 0.93125,
+    "f1_macro": 0.9498813439245888,
+    "por_classe": {
+      "cardapio": {
+        "precision": 0.9285714285714286,
+        "recall": 0.8666666666666667,
+        "f1-score": 0.896551724137931,
+        "support": 15.0
+      },
+      "horarios": {
+        "precision": 0.9285714285714286,
+        "recall": 0.8666666666666667,
+        "f1-score": 0.896551724137931,
+        "support": 15.0
+      },
+      "valores": {
+        "precision": 1.0,
+        "recall": 0.8666666666666667,
+        "f1-score": 0.9285714285714286,
+        "support": 15.0
+      },
+      "recarga_creditos": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 15.0
+      },
+      "cadastro": {
+        "precision": 1.0,
+        "recall": 0.9333333333333333,
+        "f1-score": 0.9655172413793104,
+        "support": 15.0
+      },
+      "regras_uso": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 15.0
+      },
+      "chitchat": {
+        "precision": 0.9354838709677419,
+        "recall": 0.9666666666666667,
+        "f1-score": 0.9508196721311475,
+        "support": 30.0
+      },
+      "fora_dominio": {
+        "precision": 1.0,
+        "recall": 0.925,
+        "f1-score": 0.961038961038961,
+        "support": 40.0
+      },
+      "micro avg": {
+        "precision": 0.9738562091503268,
+        "recall": 0.93125,
+        "f1-score": 0.952076677316294,
+        "support": 160.0
+      },
+      "macro avg": {
+        "precision": 0.974078341013825,
+        "recall": 0.9281250000000001,
+        "f1-score": 0.9498813439245888,
+        "support": 160.0
+      },
+      "weighted avg": {
+        "precision": 0.9745103686635945,
+        "recall": 0.93125,
+        "f1-score": 0.9517126898680743,
+        "support": 160.0
+      }
+    },
+    "rotulos": [
+      "cardapio",
+      "horarios",
+      "valores",
+      "recarga_creditos",
+      "cadastro",
+      "regras_uso",
+      "chitchat",
+      "fora_dominio"
+    ],
+    "matriz_confusao": [
+      [
+        13,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2
+      ],
+      [
+        1,
+        13,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        13,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2
+      ],
+      [
+        0,
+        0,
+        0,
+        15,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        14,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        15,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        29,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        37,
+        1
+      ]
+    ],
+    "rotulos_previstos": [
+      "cardapio",
+      "horarios",
+      "valores",
+      "recarga_creditos",
+      "cadastro",
+      "regras_uso",
+      "chitchat",
+      "fora_dominio",
+      "esclarecer"
+    ],
+    "taxa_falso_aceite": 0.014285714285714285,
+    "taxa_falsa_recusa": 0.011111111111111112,
+    "taxa_esclarecimento": 0.04375,
+    "latencia_media_ms": 1.2443270559742814
+  },
+  "arquivo_teste": "/Users/ton/6semestre/IA/trabalho /rangot-codex/dados/teste.csv"
+}
